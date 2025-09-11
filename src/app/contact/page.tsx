@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -34,38 +35,33 @@ export default function ContactPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h1 className="text-5xl font-bold text-center mb-12">Get in Touch</h1>
-      <p className="text-center text-gray-500 mb-16 text-lg">
-        Have any questions or inquiries? Reach out to us through the form or via our contact info.
+      <h1 className="text-5xl font-bold text-center mb-8 text-gray-900">Get in Touch</h1>
+      <p className="text-center text-gray-500 mb-12 text-lg">
+        Have questions or inquiries? Reach out via the form or contact info below.
       </p>
 
       <div className="grid md:grid-cols-2 gap-12">
+
         {/* Left side: Contact Info */}
-        <div className="space-y-8">
-          <div className="p-6 border rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 flex items-start">
-            <FiMail/>
-            <div>
-              <h3 className="text-xl font-semibold mb-1">Email</h3>
-              <p className="text-gray-700">contact@awesomecompany.com</p>
+        <div className="space-y-6">
+          {[
+            { icon: <FiMail size={24} />, title: 'Email', info: 'contact@awesomecompany.com' },
+            { icon: <FiPhone size={24} />, title: 'Phone', info: '+1 234 567 890' },
+            { icon: <FiMapPin size={24} />, title: 'Location', info: '123 Main Street, City, Country' },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className="flex items-start gap-4 p-6 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2"
+            >
+              <div className="text-blue-600">{item.icon}</div>
+              <div>
+                <h3 className="text-xl font-semibold mb-1">{item.title}</h3>
+                <p className="text-gray-700">{item.info}</p>
+              </div>
             </div>
-          </div>
+          ))}
 
-          <div className="p-6 border rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 flex items-start">
-            <FiPhone />
-            <div>
-              <h3 className="text-xl font-semibold mb-1">Phone</h3>
-              <p className="text-gray-700">+1 234 567 890</p>
-            </div>
-          </div>
-
-          <div className="p-6 border rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-2 flex items-start">
-            <FiMapPin />
-            <div>
-              <h3 className="text-xl font-semibold mb-1">Location</h3>
-              <p className="text-gray-700">123 Main Street, City, Country</p>
-            </div>
-          </div>
-
+          {/* Map */}
           <div className="mt-6 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1">
             <iframe
               src="https://www.google.com/maps/embed?pb=..."
@@ -81,7 +77,7 @@ export default function ContactPage() {
         {/* Right side: Contact Form */}
         <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1">
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <input
+            <Input
               type="text"
               name="name"
               placeholder="Your Name"
@@ -90,7 +86,7 @@ export default function ContactPage() {
               className="w-full border rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none transition"
               required
             />
-            <input
+            <Input
               type="email"
               name="email"
               placeholder="Your Email"
@@ -99,7 +95,7 @@ export default function ContactPage() {
               className="w-full border rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none transition"
               required
             />
-            <input
+            <Input
               type="text"
               name="subject"
               placeholder="Subject"
@@ -113,7 +109,7 @@ export default function ContactPage() {
               placeholder="Your Message"
               value={form.message}
               onChange={handleChange}
-              className="w-full border rounded-xl p-4 h-40 focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full border rounded-xl p-4 h-44 focus:ring-2 focus:ring-blue-500 outline-none transition"
               required
             />
             <Button
@@ -122,8 +118,9 @@ export default function ContactPage() {
             >
               Send Message
             </Button>
-            {success && <p className="text-green-600 mt-2">Your message has been sent!</p>}
-            {error && <p className="text-red-600 mt-2">{error}</p>}
+
+            {success && <p className="text-green-600 mt-2 font-medium">Your message has been sent!</p>}
+            {error && <p className="text-red-600 mt-2 font-medium">{error}</p>}
           </form>
         </div>
       </div>

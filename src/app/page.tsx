@@ -120,13 +120,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   <div className="flex flex-col sm:flex-row justify-center gap-4">
     <a
-      href="/booking"
+      href="/login"
       className="px-6 py-3 sm:px-8 sm:py-4 bg-blue-600 text-white font-semibold rounded-xl shadow-lg transform transition hover:scale-105 hover:bg-blue-700"
     >
       Try it
     </a>
     <a
-      href="/history"
+      href="/contact"
       className="px-6 py-3 sm:px-8 sm:py-4 bg-white border border-gray-300 text-gray-800 font-semibold rounded-xl shadow hover:scale-105 hover:bg-gray-100 transition"
     >
       Contact Us

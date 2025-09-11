@@ -2,21 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
-import Button from "@/components/ui/Button";
+import Reservations from "../reservations/page";
+import Companies from "../companies/page";
+import CreateReservation from "../createReservation/page";
+import History from "../history/page";
 
 enum Tab {
-  Profile = "Profile",
-  CreateReservation = "Create Reservation",
   Reservations = "Reservations",
+  Companies = "Companies",
+  CreateReservation = "Create Reservation",
   History = "History",
 }
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<Tab>(Tab.Profile);
+  const [activeTab, setActiveTab] = useState<Tab>(Tab.Reservations);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,70 +44,166 @@ export default function Dashboard() {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case Tab.Profile:
-        if (!userData) return <p>No user data found.</p>;
-        return (
-          <div className="space-y-2">
-            {Object.entries(userData).map(([key, value]) => (
-            <p key={key}>
-                <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{" "}
-                {JSON.stringify(value)}
-            </p>
-            ))}
-          </div>
-        );
-
-      case Tab.CreateReservation:
-        return (
-          <div>
-            <p>Create a new reservation here.</p>
-          </div>
-        );
-
-      case Tab.Reservations:
-        return (
-          <div>
-            <p>List of current reservations.</p>
-          </div>
-        );
-
-      case Tab.History:
-        return (
-          <div>
-            <p>Reservation history.</p>
-          </div>
-        );
-
-      default:
-        return null;
+      case Tab.Reservations: return <Reservations />;
+      case Tab.Companies: return <Companies />;
+      case Tab.CreateReservation: return <CreateReservation />;
+      case Tab.History: return <History />;
     }
   };
 
-  const tabs = [Tab.Profile, Tab.CreateReservation, Tab.Reservations, Tab.History];
-
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">Dashboard</h1>
-
-      <div className="flex border-b mb-4">
-        {tabs.map((tab) => (
+    <div className="flex min-h-[calc(100vh-100px)] bg-gray-100">
+      <nav className="w-64 p-6 bg-white rounded-xl shadow-md space-y-4 flex flex-col my-6 ml-6">
+        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        {Object.values(Tab).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 -mb-px font-medium border-b-2 transition ${
+            className={`text-left px-4 py-2 rounded-lg font-medium transition ${
               activeTab === tab
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "bg-blue-600 text-white"
+                : "text-gray-700 hover:bg-gray-200"
             }`}
           >
             {tab}
           </button>
         ))}
-      </div>
+      </nav>
 
-      <div className="p-4 border rounded-lg shadow-sm bg-white">
+      {/* Контент */}
+      <main className="flex-1 p-6">
         {renderTabContent()}
-      </div>
+      </main>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+// 'use client';
+
+// import { useEffect, useState } from "react";
+// import { auth, db } from "@/lib/firebase";
+// import { doc, getDoc } from "firebase/firestore";
+// import { onAuthStateChanged, User } from "firebase/auth";
+// import Reservations from "../reservations/page";
+// import Companies from "../companies/page";
+// import CreateReservation from "../createReservation/page";
+// import History from "../history/page";
+// import { FaBars, FaTimes } from "react-icons/fa";
+
+// enum Tab {
+//   Reservations = "Reservations",
+//   Companies = "Companies",
+//   CreateReservation = "Create Reservation",
+//   History = "History",
+// }
+
+// export default function Dashboard() {
+//   const [user, setUser] = useState<User | null>(null);
+//   const [userData, setUserData] = useState<any>(null);
+//   const [activeTab, setActiveTab] = useState<Tab>(Tab.Reservations);
+//   const [loading, setLoading] = useState(true);
+//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+//   useEffect(() => {
+//     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+//       setUser(currentUser);
+//       if (currentUser) {
+//         const docRef = doc(db, "users", currentUser.uid);
+//         const docSnap = await getDoc(docRef);
+//         if (docSnap.exists()) {
+//           setUserData(docSnap.data());
+//         }
+//       } else {
+//         setUserData(null);
+//       }
+//       setLoading(false);
+//     });
+//     return () => unsubscribe();
+//   }, []);
+
+//   if (loading) return <p className="text-center mt-10">Loading...</p>;
+//   if (!user) return <p className="text-center mt-10">Please log in first.</p>;
+
+//   const renderTabContent = () => {
+//     switch (activeTab) {
+//       case Tab.Reservations: return <Reservations />;
+//       case Tab.Companies: return <Companies />;
+//       case Tab.CreateReservation: return <CreateReservation />;
+//       case Tab.History: return <History />;
+//     }
+//   };
+
+//   const tabs = Object.values(Tab);
+
+//   return (
+//     <div className="flex min-h-screen bg-gray-100">
+
+//       {/* Мобильная кнопка для открытия меню */}
+//       <div className="md:hidden fixed top-4 left-4 z-50">
+//         <button
+//           onClick={() => setIsSidebarOpen(true)}
+//           className="p-2 rounded-md bg-blue-600 text-white"
+//         >
+//           <FaBars size={20} />
+//         </button>
+//       </div>
+
+//       {/* Sidebar */}
+//       <nav
+//         className={`
+//           fixed md:relative top-0 left-0 z-40 h-full w-64 bg-white p-6 space-y-4 shadow-md
+//           transform transition-transform duration-300
+//           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
+//         `}
+//       >
+//         <div className="flex justify-between md:block mb-6">
+//           <h1 className="text-2xl font-bold">Dashboard</h1>
+//           {/* Кнопка закрытия на мобилке */}
+//           <button
+//             className="md:hidden mt-2 p-2 text-gray-600"
+//             onClick={() => setIsSidebarOpen(false)}
+//           >
+//             <FaTimes size={20} />
+//           </button>
+//         </div>
+
+//         {tabs.map(tab => (
+//           <button
+//             key={tab}
+//             onClick={() => {
+//               setActiveTab(tab);
+//               setIsSidebarOpen(false); // закрываем sidebar на мобилке
+//             }}
+//             className={`text-left px-4 py-2 rounded-lg font-medium transition w-full ${
+//               activeTab === tab
+//                 ? "bg-blue-600 text-white"
+//                 : "text-gray-700 hover:bg-gray-200"
+//             }`}
+//           >
+//             {tab}
+//           </button>
+//         ))}
+//       </nav>
+
+//       {/* Overlay для мобильного меню */}
+//       {isSidebarOpen && (
+//         <div
+//           className="fixed inset-0 bg-black/30 z-30 md:hidden"
+//           onClick={() => setIsSidebarOpen(false)}
+//         ></div>
+//       )}
+
+//       {/* Контент */}
+//       <main className="flex-1 p-6 md:ml-64">{renderTabContent()}</main>
+//     </div>
+//   );
+// }

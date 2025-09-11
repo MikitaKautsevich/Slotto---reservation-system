@@ -73,7 +73,7 @@ const selectPlan = async (planName: string) => {
 
       setPopupData({
       title: "Subscription Successful!",
-      message: `You have successfully subscribed to the  <b>${planName} </b> plan.`,
+      message: `You have successfully subscribed to the ${planName} plan.`,
       });
     } catch (error) {
         console.error("Error updating user plan:", error);
