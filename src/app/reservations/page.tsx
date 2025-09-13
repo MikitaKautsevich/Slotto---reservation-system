@@ -19,7 +19,7 @@ interface Reservation {
   location?: string;
   notes?: string;
   price: number;
-  status: "pending" | "confirmed";
+  status: "pending" | "confirmed" | "cancelled";
 }
 
 interface Company {
@@ -55,7 +55,9 @@ const Reservations: FC = () => {
     try {
       const q = query(collection(db, "reservations"), where("userId", "==", uid));
       const snapshot = await getDocs(q);
-      const res: Reservation[] = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Reservation));
+      const res: Reservation[] = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() } as Reservation))
+        .filter((res) => res.status !== "cancelled");
       setReservations(res);
     } catch (err) {
       console.error(err);

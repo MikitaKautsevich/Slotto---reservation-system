@@ -147,6 +147,7 @@ const Companies: FC = () => {
           title={popupData.title}
           message={popupData.message}
           onClose={() => setPopupData(null)}
+          onConfirm={() => setPopupData(null)}
         />
       )}
     </div>
