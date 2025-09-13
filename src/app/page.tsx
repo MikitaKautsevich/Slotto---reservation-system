@@ -163,7 +163,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
       </motion.section>
 
-            {/* Reviews Section */}
+      {/* Reviews Section */}
       <motion.section
         className="py-20 max-w-6xl mx-auto px-6"
         initial={{ opacity: 0, y: 50 }}

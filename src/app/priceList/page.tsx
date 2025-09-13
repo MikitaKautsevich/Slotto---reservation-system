@@ -1,12 +1,13 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Popup from "@/components/Popup";
 import { db, auth } from "@/lib/firebase";
-import { collection, doc, getDocs, updateDoc, Timestamp } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc, Timestamp, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import InfoPopup from "@/components/InfoPopup";
 
 interface Plan {
   id?: string;
@@ -19,10 +20,11 @@ export default function PriceList() {
   const [pricePlans, setPricePlans] = useState<Plan[]>([]);
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
-
-  const [popupData, setPopupData] = useState<{ title: string; message: string } | null>(null);
-
   
+  const [infoPopup, setInfoPopup] = useState<{ title: string; message: string } | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchPricePlans = async () => {
       try {
@@ -45,18 +47,22 @@ export default function PriceList() {
     fetchPricePlans();
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-    });
-    return unsubscribe;
-  }, []);
-
-const selectPlan = async (planName: string) => {
-    if (!user) {
-      router.push("/login");
-      return;
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (u) => {
+    setUser(u);
+    if (u) {
+      const userDocRef = doc(db, "users", u.uid);
+      const userSnap = await getDoc(userDocRef);
+      if (userSnap.exists()) {
+        setCurrentPlan(userSnap.data().currentPlan ?? null);
+      }
     }
+  });
+  return unsubscribe;
+}, []);
+
+  const confirmPlan = async () => {
+    if (!selectedPlan || !user) return;
 
     try {
       const userDocRef = doc(db, "users", user.uid);
@@ -66,22 +72,34 @@ const selectPlan = async (planName: string) => {
       endDate.setMonth(endDate.getMonth() + 1);
 
       await updateDoc(userDocRef, {
-        currentPlan: planName,
+        currentPlan: selectedPlan.name,
         planStart: Timestamp.fromDate(startDate),
         planEnd: Timestamp.fromDate(endDate),
       });
 
-      setPopupData({
-      title: "Subscription Successful!",
-      message: `You have successfully subscribed to the ${planName} plan.`,
-      });
+      setCurrentPlan(selectedPlan.name);
+
+      setInfoPopup({
+      title: "Subscription Successful",
+      message: `You have successfully subscribed to the ${selectedPlan.name} plan.`,
+    });
     } catch (error) {
-        console.error("Error updating user plan:", error);
-        setPopupData({
-          title: "Subscription Failed",
-          message: "Something went wrong. Please try again.",
-        });
+      console.error("Error updating user plan:", error);
+      setInfoPopup({
+      title: "Subscription Failed",
+      message: "Something went wrong. Please try again.",
+    });
+    } finally {
+      setSelectedPlan(null);
     }
+  };
+
+  const selectPlan = (plan: Plan) => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    setSelectedPlan(plan);
   };
 
   return (
@@ -93,41 +111,56 @@ const selectPlan = async (planName: string) => {
 
       {/* Plan cards */}
       <div className="grid md:grid-cols-3 gap-6">
-        {pricePlans &&
-          pricePlans.map((plan: Plan) => (
+        {pricePlans.map((plan) => {
+          const isCurrent = currentPlan === plan.name;
+          return (
             <div
               key={plan.name}
-              className={`border rounded-xl shadow-lg p-6 flex flex-col justify-between transition transform hover:scale-105`}
+              className={`rounded-xl shadow-lg p-6 flex flex-col justify-between transition transform hover:scale-105
+              ${isCurrent ? "border-2 border-blue-500" : "border"}`}
             >
-              {/* {plan.bestValue && (
-          <div className="text-sm text-white bg-blue-600 px-2 py-1 rounded-full mb-3 w-max">
-            Best Value
-          </div> */}
-              {/* )} */}
               <h2 className="text-2xl font-bold mb-4">{plan.name}</h2>
               <p className="text-3xl font-extrabold mb-6">{plan.price} €</p>
               <ul className="space-y-2 mb-6">
-          {plan.information.map((feature: string, index: number) => (
-            <li key={index} className="flex items-center">
-              <span className="mr-2 text-green-500 font-bold">✔</span>
-              {feature}
-            </li>
-          ))}
+                {plan.information.map((feature, index) => (
+                  <li key={index} className="flex items-center">
+                    <span className="mr-2 text-green-500 font-bold">✔</span>
+                    {feature}
+                  </li>
+                ))}
               </ul>
+
               <Button
-                className= "w-full bg-blue-600 hover:bg-blue-700"
-                onClick={() => selectPlan(plan.name)}
+                className={`w-full ${
+                  isCurrent
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+                disabled={isCurrent}
+                onClick={() => !isCurrent && selectPlan(plan)}
               >
-                Select
+                {isCurrent ? "Your Current Plan" : "Select"}
               </Button>
             </div>
-          ))}
+          );
+        })}
       </div>
-      {popupData && (
+
+      {/* Popup подтверждения */}
+      {selectedPlan && (
         <Popup
-          title={popupData.title}
-          message={popupData.message}
-          onClose={() => setPopupData(null)}
+          title="Confirm Subscription"
+          message={`Are you sure you want to subscribe to the "${selectedPlan.name}" plan?`}
+          onConfirm={confirmPlan}
+          onClose={() => setSelectedPlan(null)}
+        />
+      )}
+
+      {infoPopup && (
+        <InfoPopup
+          title={infoPopup.title}
+          message={infoPopup.message}
+          onClose={() => setInfoPopup(null)}
         />
       )}
 
@@ -139,12 +172,12 @@ const selectPlan = async (planName: string) => {
             <thead>
               <tr>
                 <th className="border p-3">Feature</th>
-                {pricePlans && pricePlans.map((plan: Plan) => (
+                {pricePlans.map((plan) => (
                   <th
-                  key={plan.name}
-                  className="border p-3 text-center bg-gray-100 font-semibold"
+                    key={plan.name}
+                    className="border p-3 text-center bg-gray-100 font-semibold"
                   >
-                  {plan.name}
+                    {plan.name}
                   </th>
                 ))}
               </tr>
@@ -160,13 +193,11 @@ const selectPlan = async (planName: string) => {
               ].map((feature, idx) => (
                 <tr key={idx} className="border-t">
                   <td className="border p-3 font-medium">{feature}</td>
-                  {pricePlans && pricePlans.map((plan: Plan) => {
-                  return (
+                  {pricePlans.map((plan) => (
                     <td key={plan.name} className="border p-3 text-center">
-                    {2 > 1 ? "✔" : "—"}
+                      {2 > 1 ? "✔" : "—"}
                     </td>
-                  );
-                  })}
+                  ))}
                 </tr>
               ))}
             </tbody>
