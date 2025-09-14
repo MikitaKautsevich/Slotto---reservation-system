@@ -8,18 +8,22 @@ import Popup from "@/components/Popup";
 import InfoPopup from "@/components/InfoPopup";
 import { FaTimes, FaEdit } from "react-icons/fa";
 import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
 
 interface Reservation {
   id: string;
   userId: string;
-  planName: string;
-  startDate: any;
+  clientName: string;
+  clientEmail: string;
+  companyId: string;
+  serviceName: string;
+  startTime: any;
+  endTime: any;
   participants: number;
   location?: string;
   notes?: string;
   price: number;
   status: "pending" | "confirmed" | "cancelled";
+  paymentStatus: "unpaid" | "paid";
 }
 
 interface Company {
@@ -75,7 +79,7 @@ const Reservations: FC = () => {
   };
 
   const handleCancelClick = (res: Reservation) => {
-    const resDate = res.startDate.toDate();
+    const resDate = res.startTime.toDate();
     const diffHours = (resDate.getTime() - new Date().getTime()) / (1000 * 60 * 60);
     const canCancel = diffHours >= 24;
 
@@ -102,7 +106,7 @@ const Reservations: FC = () => {
   };
 
   const handleEditClick = (res: Reservation) => {
-    const resDate = res.startDate.toDate();
+    const resDate = res.startTime.toDate();
     setEditReservation(res);
     setEditDate(resDate.toISOString().substring(0, 10));
     setEditParticipants(res.participants);
@@ -117,13 +121,18 @@ const Reservations: FC = () => {
       const newTimestamp = Timestamp.fromDate(new Date(editDate));
       const resDocRef = doc(db, "reservations", editReservation.id);
       await updateDoc(resDocRef, {
-        startDate: newTimestamp,
+        startTime: newTimestamp,
         participants: editParticipants,
         location: editLocation,
-        notes: editNotes
+        notes: editNotes,
+        companyId: editReservation.companyId
       });
 
-      setReservations(prev => prev.map(r => r.id === editReservation.id ? { ...r, startDate: newTimestamp, participants: editParticipants, location: editLocation, notes: editNotes } : r));
+      setReservations(prev => prev.map(r => 
+        r.id === editReservation.id 
+          ? { ...r, startTime: newTimestamp, participants: editParticipants, location: editLocation, notes: editNotes, companyId: editReservation.companyId } 
+          : r
+      ));
 
       setInfoPopup({ title: "Reservation Updated", message: "Your reservation has been updated." });
       setEditReservation(null);
@@ -133,22 +142,27 @@ const Reservations: FC = () => {
     }
   };
 
+  const getCompanyName = (companyId: string) => {
+    return companies.find(c => c.id === companyId)?.name || "Unknown";
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-4">
       <h2 className="text-3xl font-bold text-center mb-4">Your Reservations</h2>
       {reservations.length === 0 && <p className="text-center text-gray-500">No active reservations found.</p>}
       {reservations.map((res) => {
-        const resDate = res.startDate.toDate();
-        const diffHours = (resDate.getTime() - new Date().getTime()) / (1000 * 60 * 60);
-        const canCancel = true
+        const resDate = res.startTime?.toDate();
+        const diffHours = (resDate?.getTime() - new Date().getTime()) / (1000 * 60 * 60);
+        const canCancel = diffHours >= 24;
 
         return (
           <div key={res.id} className="relative border rounded-xl p-4 md:p-6 flex flex-col md:flex-row md:justify-between bg-gray-50 shadow-sm hover:shadow-md transition">
             <div>
-              <p className="font-semibold text-lg">{res.planName}</p>
-              <p className="text-gray-600">Date: {resDate.toLocaleDateString()}</p>
-              <p className="text-gray-600">Time: {resDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              <p className="font-semibold text-lg">{res.serviceName}</p>
+              <p className="text-gray-600">Date: {resDate?.toLocaleDateString()}</p>
+              <p className="text-gray-600">Time: {resDate?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               <p className="text-gray-600">Participants: {res.participants}</p>
+              <p className="text-gray-600">Company: {getCompanyName(res.companyId)}</p>
               {res.location && <p className="text-gray-600">Location: {res.location}</p>}
               {res.notes && <p className="text-gray-600">Notes: {res.notes}</p>}
             </div>
@@ -182,16 +196,45 @@ const Reservations: FC = () => {
       {/* Popup для редактирования */}
       {editReservation && (
         <Popup
-          title={`Edit Reservation: ${editReservation.planName}`}
+          title={`Edit Reservation: ${editReservation.serviceName}`}
           message={
             <div className="space-y-2">
-              <Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
-              <Input type="number" value={editParticipants} min={1} onChange={(e) => setEditParticipants(Number(e.target.value))} />
-              <select value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="w-full p-2 border rounded-md">
+              <Input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+              <Input
+                type="number"
+                value={editParticipants}
+                min={1}
+                onChange={(e) => setEditParticipants(Number(e.target.value))}
+              />
+              <select
+                value={editReservation.companyId}
+                onChange={(e) => setEditReservation({
+                  ...editReservation,
+                  companyId: e.target.value
+                })}
+                className="w-full p-2 border rounded-md"
+              >
                 <option value="">Select Company</option>
-                {companies.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                {companies.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
-              <Input type="text" placeholder="Notes" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} />
+              <Input
+                type="text"
+                placeholder="Location"
+                value={editLocation}
+                onChange={(e) => setEditLocation(e.target.value)}
+              />
+              <Input
+                type="text"
+                placeholder="Notes"
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+              />
             </div>
           }
           onClose={() => setEditReservation(null)}
@@ -205,9 +248,7 @@ const Reservations: FC = () => {
           message={popupData.message}
           onClose={() => setPopupData(null)}
           onConfirm={() => {
-            if (popupData.onConfirm) {
-              popupData.onConfirm();
-            }
+            if (popupData.onConfirm) popupData.onConfirm();
             setPopupData(null);
           }}
         />

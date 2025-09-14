@@ -109,57 +109,112 @@ const CreateReservation: FC = () => {
     return newErrors;
   }, [name, email, date, time, participants, selectedCompany]);
 
-  const handleCreate = async () => {
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+  // const handleCreate = async () => {
+  //   const validationErrors = validate();
+  //   if (Object.keys(validationErrors).length > 0) {
+  //     setErrors(validationErrors);
+  //     return;
+  //   }
 
-    try {
-      const [hour, minute] = time.split(":").map(Number);
-      const reservationDate = new Date(date);
-      reservationDate.setHours(hour, minute);
+  //   try {
+  //     const [hour, minute] = time.split(":").map(Number);
+  //     const reservationDate = new Date(date);
+  //     reservationDate.setHours(hour, minute);
 
-      const reservation = {
-        userId: user?.uid || null,
-        userName: name,
-        userEmail: email,
-        companyId: selectedCompany,
-        planId: selectedPlan.id,
-        planName: selectedPlan.name,
-        startDate: Timestamp.fromDate(reservationDate),
-        createdAt: Timestamp.now(),
-        participants,
-        notes,
-        location,
-        price,
-        status: "pending",
-        paymentStatus: "unpaid",
-      };
+  //     const reservation = {
+  //       userId: user?.uid || null,
+  //       userName: name,
+  //       userEmail: email,
+  //       companyId: selectedCompany,
+  //       planId: selectedPlan.id,
+  //       planName: selectedPlan.name,
+  //       startDate: Timestamp.fromDate(reservationDate),
+  //       createdAt: Timestamp.now(),
+  //       participants,
+  //       notes,
+  //       location,
+  //       price,
+  //       status: "pending",
+  //       paymentStatus: "unpaid",
+  //     };
 
-      await addDoc(collection(db, "reservations"), reservation);
+  //     await addDoc(collection(db, "reservations"), reservation);
 
-      setInfoPopup({
-        title: "✅ Reservation Created",
-        message: `Your reservation on ${date} at ${time} was successfully created!`,
-      });
+  //     setInfoPopup({
+  //       title: "✅ Reservation Created",
+  //       message: `Your reservation on ${date} at ${time} was successfully created!`,
+  //     });
 
-      setDate("");
-      setTime("12:00");
-      setParticipants(1);
-      setNotes("");
-      setLocation("");
-      setSelectedPlan(plans[0]);
-      setErrors({});
-    } catch (err) {
-      console.error(err);
-      setInfoPopup({
-        title: "❌ Error",
-        message: "Failed to create reservation. Please try again later.",
-      });
-    }
-  };
+  //     setDate("");
+  //     setTime("12:00");
+  //     setParticipants(1);
+  //     setNotes("");
+  //     setLocation("");
+  //     setSelectedPlan(plans[0]);
+  //     setErrors({});
+  //   } catch (err) {
+  //     console.error(err);
+  //     setInfoPopup({
+  //       title: "❌ Error",
+  //       message: "Failed to create reservation. Please try again later.",
+  //     });
+  //   }
+  // };
+const handleCreate = async () => {
+  const validationErrors = validate();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
+
+  try {
+    const [hour, minute] = time.split(":").map(Number);
+    const startDate = new Date(date);
+    startDate.setHours(hour, minute, 0, 0);
+
+    const endDate = new Date(startDate);
+    endDate.setMinutes(endDate.getMinutes() + 30); // по умолчанию длительность 30 минут
+
+    const reservation = {
+      userId: user?.uid || null,
+      clientName: name, // ✅ чтобы в календаре было видно имя
+      clientEmail: email,
+      companyId: selectedCompany,
+      serviceName: selectedPlan.name, // ✅ чтобы в календаре было видно услугу
+      serviceId: selectedPlan.id,
+      startTime: Timestamp.fromDate(startDate), // ✅ календарь теперь увидит это поле
+      endTime: Timestamp.fromDate(endDate),     // ✅ и это поле
+      createdAt: Timestamp.now(),
+      participants,
+      notes,
+      location,
+      price,
+      status: "pending",
+      paymentStatus: "unpaid",
+    };
+
+    await addDoc(collection(db, "reservations"), reservation);
+
+    setInfoPopup({
+      title: "✅ Reservation Created",
+      message: `Your reservation on ${date} at ${time} was successfully created!`,
+    });
+
+    setDate("");
+    setTime("12:00");
+    setParticipants(1);
+    setNotes("");
+    setLocation("");
+    setSelectedPlan(plans[0]);
+    setErrors({});
+  } catch (err) {
+    console.error(err);
+    setInfoPopup({
+      title: "❌ Error",
+      message: "Failed to create reservation. Please try again later.",
+    });
+  }
+};
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg p-8 space-y-6">

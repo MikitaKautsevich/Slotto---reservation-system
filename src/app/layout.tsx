@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { getAuth, signOut } from "firebase/auth";
 import { FaRegUserCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 
 
@@ -20,8 +22,27 @@ function Header() {
 
   const router = useRouter();
 
+  // Only fetch doc if user is defined
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  // Fetch user role if user is defined
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user?.uid) {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setUserRole(data.role || null);
+        }
+      }
+    };
+    fetchUserRole();
+  }, [user]);
+
   const menuItems = [
-    { name: "Dashboard", href: "/dashboard", visible: user },
+    { name: "Dashboard", href: "/dashboard", visible: userRole === "user" },
+    { name: "Dashboard", href: "/company/dashboard", visible: userRole === "companyAdmin" },
     { name: "Price List", href: "/priceList", visible: true },
     { name: "Contact", href: "/contact", visible: true },
   ];
@@ -30,6 +51,7 @@ function Header() {
   const auth = getAuth();
   signOut(auth).then(() => {
     console.log("Sing out")
+    setUserRole(null)
     router.push("/")
   }).catch((error) => {
     console.log(error)
@@ -66,10 +88,10 @@ function Header() {
           {!user ? (
             <>
               <Link
-                href="/login"
+                href="/company/register"
                 className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
               >
-                Try it for free
+                Add Your Company
               </Link>
               <Link
                 href="/login"
@@ -86,6 +108,12 @@ function Header() {
               >
                 <FaRegUserCircle size={30} />
               </span>
+              <Link
+                href="/company/register"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
+              >
+                Add Your Company
+              </Link>
               <button
                 onClick={signOutUser}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition"

@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert("Login successful!");
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -37,7 +37,7 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       // result.user содержит информацию о пользователе
       alert(`Welcome ${result.user.displayName}`);
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     } catch (err: any) {
       console.error("Google sign-in error:", err);
       setError(err.message);
