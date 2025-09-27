@@ -1,31 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, Query, DocumentData } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot, Query, DocumentData, Timestamp } from "firebase/firestore";
 import dayjs from "dayjs";
 
 const GRID_START_HOUR = 8;
 const GRID_END_HOUR = 22;
 const INTERVAL_MINUTES = 30;
-const SLOT_HEIGHT = 40;
+const SLOT_HEIGHT = 70;
 
-function toDate(value: any): Date | null {
+function toDate(
+  value: Timestamp | { seconds: number } | Date | string | null | undefined
+): Date | null {
   if (!value) return null;
-  if (typeof value === "object" && typeof value.toDate === "function") {
-    return value.toDate();
+  if (typeof value === "object" && typeof (value as Timestamp).toDate === "function") {
+    return (value as Timestamp).toDate();
   }
-  if (value && typeof value.seconds === "number") {
-    return new Date(value.seconds * 1000);
+  if (value && typeof (value as { seconds: number }).seconds === "number") {
+    return new Date((value as { seconds: number }).seconds * 1000);
   }
-  return new Date(value);
+  return new Date(value as string | Date);
 }
 
 type Reservation = {
   id: string;
-  startTime: any;
-  endTime: any;
+  startTime: Timestamp;
+  endTime: Timestamp;
   companyId?: string;
   clientName?: string;
   clientPhone?: string;
@@ -37,56 +38,46 @@ type Reservation = {
   [key: string]: any;
 };
 
-export default function ReservationsPage() {
-  const [companyId, setCompanyId] = useState<string | null>(null);
+export default function ReservationsPage({ companyId }: { companyId: string }) {
   const [date, setDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState<Date>(new Date());
 
+  // Загрузка и подписка на резервации в реальном времени
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const qComp = query(collection(db, "companies"), where("ownerId", "==", user.uid));
-        const snapComp = await getDocs(qComp);
-        if (!snapComp.empty) {
-          const compDoc = snapComp.docs[0];
-          const cid = compDoc.id;
-          setCompanyId(cid);
-          await loadReservationsForCompany(cid);
-        }
-      } catch (err) {
-        console.error("Load company/reservations error:", err);
-      } finally {
-        setLoading(false);
-      }
-    });
-    return () => unsub();
-  }, []);
+    if (!companyId) return;
 
-  async function loadReservationsForCompany(cid: string) {
-    try {
-      const q: Query<DocumentData> = query(collection(db, "reservations"), where("companyId", "==", cid));
-      const snap = await getDocs(q);
-      const list = snap.docs.map((d) => ({ ...(d.data() as Reservation), id: d.id }));
-      const normalized = list.map((r) => ({
-        ...r,
-        _start: toDate(r.startTime),
-        _end: toDate(r.endTime),
-      }));
-      setReservations(normalized);
-    } catch (err) {
-      console.error("Failed to load reservations:", err);
-      setReservations([]);
-    }
-  }
+    const q: Query<DocumentData> = query(
+      collection(db, "reservations"),
+      where("companyId", "==", companyId)
+    );
 
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list = snapshot.docs.map((d) => ({ ...(d.data() as Reservation), id: d.id }));
+        const normalized = list.map((r) => ({
+          ...r,
+          _start: toDate(r.startTime),
+          _end: toDate(r.endTime),
+        }));
+        setReservations(normalized);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Failed to load reservations:", error);
+        setReservations([]);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [companyId]);
+
+  // Обновление текущего времени каждую минуту
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60000); // обновляем каждую минуту
+    const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 

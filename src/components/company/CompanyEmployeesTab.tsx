@@ -1,303 +1,248 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { db, auth, storage } from "@/lib/firebase";
+import { useState, useEffect } from "react";
+import { db, auth } from "@/lib/firebase";
 import {
   collection,
-  query,
-  where,
   getDocs,
-  addDoc,
-  updateDoc,
   deleteDoc,
   doc,
+  onSnapshot,
 } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, User } from "firebase/auth";
-import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import Textarea from "@/components/ui/Textarea";
-import Select from "@/components/ui/Select";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import EmployeeFormModal from "./EmployeeFormModal";
+import { FaUser } from "react-icons/fa";
+import InfoPopup from "../InfoPopup";
+import Popup from "../Popup";
 
-type WorkDay = {
-  date: Date;
-  startTime: Date | null;
-  endTime: Date | null;
-  breaks: { start: Date; end: Date }[];
-};
+// --- Employee Details Modal ---
+function EmployeeDetailsModal({
+  employee,
+  services,
+  onClose,
+}: {
+  employee: any;
+  services: any[];
+  onClose: () => void;
+}) {
+  if (!employee) return null;
 
-export default function CompanyEmployeesTab() {
+  const employeeServices = services.filter((s) =>
+    (employee.servicesIds || []).includes(s.id)
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full">
+        <h2 className="text-xl font-semibold mb-4">Employee Details</h2>
+        <div className="flex gap-4 items-center mb-4">
+          <img
+            src={employee.photoURL || "/placeholder.png"}
+            alt={employee.name}
+            className="w-20 h-20 object-cover rounded-xl"
+          />
+          <div>
+            <p className="font-bold text-lg">{employee.name}</p>
+            <p className="text-gray-600">{employee.position}</p>
+          </div>
+        </div>
+        <p className="text-gray-700 mb-2">
+          <strong>Email:</strong> {employee.email}
+        </p>
+        <p className="text-gray-700 mb-2">
+          <strong>Phone:</strong> {employee.phone}
+        </p>
+
+        <div className="mt-4">
+          <p className="font-medium mb-2">Services, which can do:</p>
+          {employeeServices.length > 0 ? (
+            <ul className="list-disc list-inside text-gray-700">
+              {employeeServices.map((s) => (
+                <li key={s.id}>
+                  {s.title} <span className="text-sm text-gray-500">({s.category})</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 italic">Nothing selected</p>
+          )}
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <Button onClick={onClose} className="bg-blue-600 text-white">
+            Close
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CompanyEmployeesTab({ companyId }: { companyId: string }) {
   const [user, setUser] = useState<User | null>(null);
-  const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
   const [employees, setEmployees] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
 
-  const [name, setName] = useState("");
-  const [position, setPosition] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [photoURL, setPhotoURL] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [employeeServices, setEmployeeServices] = useState<string[]>([]);
-  const [schedule, setSchedule] = useState<WorkDay[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editEmployee, setEditEmployee] = useState<any | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [viewEmployee, setViewEmployee] = useState<any | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [infoPopup, setInfoPopup] = useState<{ title: string; message: string } | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (!currentUser) {
         setLoading(false);
         return;
       }
 
-      try {
-        const q = query(collection(db, "companies"), where("ownerId", "==", currentUser.uid));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          const companyDoc = querySnapshot.docs[0];
-          setCompanyId(companyDoc.id);
-          await loadEmployees(companyDoc.id);
-          await loadServices(companyDoc.id);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
+      // --- Real-time employees ---
+      const employeesRef = collection(db, "companies", companyId, "employees");
+      const unsubscribeEmployees = onSnapshot(employeesRef, (snapshot) => {
+        const data: any[] = [];
+        snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
+        setEmployees(data);
         setLoading(false);
-      }
+      });
+
+      // --- Load services once ---
+      (async () => {
+        const servicesRef = collection(db, "companies", companyId, "services");
+        const snapshot = await getDocs(servicesRef);
+        const data: any[] = [];
+        snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
+        setServices(data);
+      })();
+
+      return unsubscribeEmployees;
     });
 
-    return () => unsubscribe();
-  }, []);
-
-  const loadEmployees = async (companyId: string) => {
-    const q = query(collection(db, "companies", companyId, "employees"));
-    const snapshot = await getDocs(q);
-    const data: any[] = [];
-    snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
-    setEmployees(data);
-  };
-
-  const loadServices = async (companyId: string) => {
-    const q = query(collection(db, "companies", companyId, "services"));
-    const snapshot = await getDocs(q);
-    const data: any[] = [];
-    snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
-    setServices(data);
-  };
-
-  const uploadPhoto = (file: File, employeeId: string) => {
-    return new Promise<string>((resolve, reject) => {
-      const storageRef = ref(storage, `employee_photos/${employeeId}_${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on(
-        "state_changed",
-        null,
-        (err) => reject(err),
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve(downloadURL);
-        }
-      );
-    });
-  };
-
-  const handleAddEmployee = async () => {
-    if (!companyId) return;
-    setSaving(true);
-
-    try {
-      const newEmployee = {
-        name,
-        position,
-        email,
-        phone,
-        photoURL,
-        services: employeeServices,
-        schedule: schedule.map(d => ({
-          date: d.date,
-          startTime: d.startTime,
-          endTime: d.endTime,
-          breaks: d.breaks,
-        })),
-        createdAt: new Date(),
-      };
-
-      const docRef = await addDoc(collection(db, "companies", companyId, "employees"), newEmployee);
-
-      let uploadedPhotoURL = photoURL;
-      if (photoFile) {
-        uploadedPhotoURL = await uploadPhoto(photoFile, docRef.id);
-        await updateDoc(doc(db, "companies", companyId, "employees", docRef.id), { photoURL: uploadedPhotoURL });
-      }
-
-      setEmployees([...employees, { id: docRef.id, ...newEmployee, photoURL: uploadedPhotoURL }]);
-
-      setName(""); setPosition(""); setEmail(""); setPhone(""); setPhotoFile(null); setPhotoURL(null); setEmployeeServices([]); setSchedule([]);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add employee");
-    } finally {
-      setSaving(false);
-    }
-  };
+    return () => unsubscribeAuth();
+  }, [companyId]);
 
   const handleDeleteEmployee = async (employeeId: string) => {
-    if (!companyId) return;
     await deleteDoc(doc(db, "companies", companyId, "employees", employeeId));
-    setEmployees(employees.filter((e) => e.id !== employeeId));
+    setConfirmDeleteId(null);
+    setInfoPopup({ title: "Deleted", message: "Employee was deleted sucessfully✅" });
   };
 
-  const handleFileChange = (file: File) => { setPhotoFile(file); setPhotoURL(URL.createObjectURL(file)); };
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); if(e.dataTransfer.files[0]) handleFileChange(e.dataTransfer.files[0]); };
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
-  const removePhoto = () => { setPhotoFile(null); setPhotoURL(null); };
-
-  const addWorkDay = () => setSchedule([...schedule, { date: new Date(), startTime: null, endTime: null, breaks: [] }]);
-  const updateWorkDay = (index: number, field: keyof WorkDay, value: any) => { const newSchedule = [...schedule]; newSchedule[index][field] = value; setSchedule(newSchedule); };
-  const addBreak = (index: number) => { const newSchedule = [...schedule]; newSchedule[index].breaks.push({ start: new Date(), end: new Date() }); setSchedule(newSchedule); };
-  const updateBreak = (dayIndex: number, breakIndex: number, field: "start" | "end", value: Date) => { const newSchedule = [...schedule]; newSchedule[dayIndex].breaks[breakIndex][field] = value; setSchedule(newSchedule); };
-
-  if (loading) return <p className="text-gray-500 text-center mt-10">Loading employees...</p>;
-  if (!user) return <p className="text-red-500 text-center mt-10">Please log in to view employees.</p>;
+  if (loading)
+    return <p className="text-gray-500 text-center mt-10">Loading employees...</p>;
+  if (!user)
+    return <p className="text-red-500 text-center mt-10">Please log in to view employees.</p>;
 
   return (
     <div className="w-full p-4 sm:p-6">
-      <div className="bg-white rounded-2xl shadow-xl p-6 space-y-6">
-        <h2 className="text-xl font-semibold text-gray-800">Add New Employee</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Position</label>
-            <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder="Position" />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Email</label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Phone</label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" />
-          </div>
-          <div className="lg:col-span-2">
-            <label className="block text-gray-700 font-medium mb-1">Photo</label>
-            <div
-              className="w-48 h-48 border border-dashed border-gray-300 rounded-xl flex items-center justify-center overflow-hidden relative cursor-pointer"
-              onDrop={handleDrop} onDragOver={handleDragOver} onClick={() => fileInputRef.current?.click()}
-            >
-              {photoURL ? (
-                <>
-                  <img src={photoURL} alt="Employee" className="w-full h-full object-cover rounded-xl" />
-                  <button type="button" onClick={(e)=>{e.stopPropagation(); removePhoto();}} className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow">×</button>
-                </>
-              ) : <span className="text-gray-400 text-center text-sm px-2">Drag & Drop or Click to Upload</span>}
-              <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={(e)=>e.target.files && handleFileChange(e.target.files[0])} />
-            </div>
-          </div>
-          <div className="lg:col-span-2">
-            <label className="block text-gray-700 font-medium mb-1">Services Employee Can Perform</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {services.map(s => (
-                <label key={s.id} className="inline-flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={employeeServices.includes(s.id)}
-                    onChange={(e) => {
-                      if(e.target.checked) setEmployeeServices([...employeeServices, s.id]);
-                      else setEmployeeServices(employeeServices.filter(id => id !== s.id));
-                    }}
-                    className="form-checkbox h-5 w-5 text-blue-600"
-                  />
-                  <span className="text-gray-700">{s.title}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="lg:col-span-2 space-y-2">
-            <label className="block text-gray-700 font-medium mb-1">Work Schedule</label>
-            {schedule.map((day, i) => (
-              <div key={i} className="border rounded-lg p-4 space-y-2 bg-gray-50">
-                <div className="flex gap-4 items-center">
-                  <DatePicker selected={day.date} onChange={(d)=>updateWorkDay(i, "date", d)} dateFormat="dd.MM.yyyy" className="border px-2 py-1 rounded-lg" />
-                  <DatePicker selected={day.startTime} onChange={(d)=>updateWorkDay(i,"startTime",d)} showTimeSelect showTimeSelectOnly timeIntervals={15} timeCaption="Start" dateFormat="HH:mm" placeholderText="Start" className="border px-2 py-1 rounded-lg" />
-                  <DatePicker selected={day.endTime} onChange={(d)=>updateWorkDay(i,"endTime",d)} showTimeSelect showTimeSelectOnly timeIntervals={15} timeCaption="End" dateFormat="HH:mm" placeholderText="End" className="border px-2 py-1 rounded-lg" />
-                  <Button onClick={()=>addBreak(i)} className="bg-gray-200 text-gray-800">+ Break</Button>
-                </div>
-                {day.breaks.map((b, bi) => (
-                  <div key={bi} className="flex gap-2 items-center ml-4">
-                    <DatePicker selected={b.start} onChange={(d)=>updateBreak(i,bi,"start",d!)} showTimeSelect showTimeSelectOnly timeIntervals={15} timeCaption="Break Start" dateFormat="HH:mm" className="border px-2 py-1 rounded-lg" />
-                    <DatePicker selected={b.end} onChange={(d)=>updateBreak(i,bi,"end",d!)} showTimeSelect showTimeSelectOnly timeIntervals={15} timeCaption="Break End" dateFormat="HH:mm" className="border px-2 py-1 rounded-lg" />
-                  </div>
-                ))}
-              </div>
-            ))}
-            <Button onClick={addWorkDay} className="bg-blue-600 text-white mt-2">+ Add Work Day</Button>
-          </div>
-
-        </div>
-
-        <Button onClick={handleAddEmployee} className={`bg-blue-600 text-white w-full ${saving ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"}`} disabled={saving}>
-          {saving ? "Saving..." : "Add Employee"}
+      {/* Add Employee Button */}
+      <div className="flex justify-end mb-6">
+        <Button
+          onClick={() => {
+            setEditEmployee(null);
+            setShowModal(true);
+          }}
+          className="bg-blue-600 text-white px-5 py-2 rounded-xl"
+        >
+          + New Employee
         </Button>
       </div>
 
-      <div className="mt-8 space-y-4">
-        {employees.map((emp) => (
-          <div key={emp.id} className="bg-gray-50 rounded-xl p-4 flex items-start gap-4 shadow-sm">
-            <img src={emp.photoURL || "/placeholder.png"} alt={emp.name} className="w-20 h-20 object-cover rounded-xl" />
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800">{emp.name}</p>
-              <p className="text-gray-600">{emp.position}</p>
-              <p className="text-gray-500 text-sm">{emp.email} | {emp.phone}</p>
-              <p className="text-gray-500 text-sm mt-1">
-                Services: {emp.services?.map((sid: any) => services.find(s=>s.id===sid)?.title).join(", ")}
-              </p>
-              <p className="text-gray-500 text-sm mt-1">
-                Schedule:
-                {emp.schedule?.length > 0 ? (
-                    emp.schedule.map((d: any, i: number) => {
-                    const date = d.date?.seconds ? new Date(d.date.seconds * 1000) : new Date(d.date);
-                    const start = d.startTime
-                        ? new Date(d.startTime.seconds ? d.startTime.seconds * 1000 : d.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                        : "-";
-                    const end = d.endTime
-                        ? new Date(d.endTime.seconds ? d.endTime.seconds * 1000 : d.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                        : "-";
-
-                    const breaks = d.breaks?.length
-                        ? d.breaks.map((b: any) => {
-                            const bStart = new Date(b.start.seconds ? b.start.seconds * 1000 : b.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-                            const bEnd = new Date(b.end.seconds ? b.end.seconds * 1000 : b.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-                            return `${bStart}-${bEnd}`;
-                        }).join(", ")
-                        : "No breaks";
-
-                    return (
-                        <span key={i} className="block">
-                        {date.toLocaleDateString()} ({start} - {end}, Breaks: {breaks})
-                        </span>
-                    );
-                    })
-                ) : (
-                    <span className="ml-1">No schedule set</span>
-                )}
+      {/* Employees List */}
+      {employees.length === 0 ? (
+        <p className="text-gray-500 text-center">No employees yet</p>
+      ) : (
+        <div className="space-y-4 bg-white rounded-2xl shadow-xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Employees</h2>
+          {employees.map((emp) => (
+            <div
+              key={emp.id}
+              className="bg-gray-50 rounded-xl p-4 flex justify-between items-start shadow-sm rounded-xl p-4 flex items-start gap-4 shadow hover:shadow-md transition cursor-pointer"
+              onClick={() => setViewEmployee(emp)}
+            >
+              {emp.photoURL ? (
+                <img
+                  src={emp.photoURL}
+                  alt={emp.name}
+                  className="w-20 h-20 object-cover rounded-xl"
+                />
+              ) : (
+                <div className="w-20 h-20 flex items-center justify-center bg-gray-200 rounded-xl">
+                  <FaUser className="text-gray-500 text-3xl" />
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="font-semibold text-gray-800">{emp.name}</p>
+                <p className="text-gray-600">{emp.position}</p>
+                <p className="text-gray-500 text-sm">
+                  {emp.email} | {emp.phone}
                 </p>
-
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditEmployee(emp);
+                    setShowModal(true);
+                  }}
+                  className="bg-blue-100 text-blue-700 px-4 py-1 rounded-lg text-sm font-medium hover:bg-blue-200"
+                >
+                  ✏️ Edit
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmDeleteId(emp.id);
+                  }}
+                  className="bg-red-600 text-red-700 px-4 py-1 rounded-lg text-sm font-medium hover:bg-red-700 hover:text-white"
+                >
+                  🗑 Delete
+                </Button>
+              </div>
             </div>
-            <button onClick={() => handleDeleteEmployee(emp.id)} className="text-red-600 font-bold hover:text-red-800">Delete</button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Employee Form Modal */}
+      {showModal && (
+        <EmployeeFormModal
+          companyId={companyId}
+          services={services}
+          employee={editEmployee}
+          onClose={() => setShowModal(false)} 
+          onEmployeeAdded={() => setShowModal(false)} />
+      )}
+
+      {/* Confirm Delete Popup */}
+      {confirmDeleteId && (
+        <Popup
+          title="Delete Employee"
+          message="Are you sure you want to delete this employee? This action cannot be undone."
+          onConfirm={() => handleDeleteEmployee(confirmDeleteId)}
+          onClose={() => setConfirmDeleteId(null)}
+        />
+      )}
+
+      {/* Employee Details Modal */}
+      {viewEmployee && (
+        <EmployeeDetailsModal
+          employee={viewEmployee}
+          services={services}
+          onClose={() => setViewEmployee(null)}
+        />
+      )}
+
+      {/* Info Popup */}
+      {infoPopup && (
+        <InfoPopup
+          title={infoPopup.title}
+          message={infoPopup.message}
+          onClose={() => setInfoPopup(null)}
+        />
+      )}
     </div>
   );
 }

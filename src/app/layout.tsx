@@ -7,25 +7,21 @@ import "./globals.css";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { getAuth, signOut } from "firebase/auth";
 import { FaRegUserCircle } from "react-icons/fa";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-
-
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, loading } = useAuth();
-
+  const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname(); // для определения активного пункта
 
-  // Only fetch doc if user is defined
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  // Fetch user role if user is defined
   useEffect(() => {
     const fetchUserRole = async () => {
       if (user?.uid) {
@@ -48,54 +44,60 @@ function Header() {
   ];
 
   const signOutUser = () => {
-  const auth = getAuth();
-  signOut(auth).then(() => {
-    console.log("Sing out")
-    setUserRole(null)
-    router.push("/")
-  }).catch((error) => {
-    console.log(error)
-  });
-  }
+    const auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        setUserRole(null);
+        router.push("/");
+      })
+      .catch(console.log);
+  };
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
-      <nav className="mx-auto flex justify-between items-center p-4">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-              ST
-            </div>
-            <span className="text-2xl font-bold text-blue-900">Slotto</span>
-          </Link>
+    <header className="backdrop-blur-md bg-white/80 border-b border-gray-200 sticky top-0 z-50 shadow-md">
+      <nav className="mx-auto flex justify-between items-center px-8 py-4 max-w-8xl font-sans">
+        {/* Логотип */}
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-extrabold shadow-lg">
+            ST
+          </div>
+          <span className="text-3xl font-bold text-gray-900 tracking-tight">Slotto</span>
+        </Link>
 
-          {/* Десктопное меню */}
-          <div className="hidden md:flex gap-4">
-            {menuItems.filter(item => item.visible).map((item) => (
+        {/* Десктопное меню */}
+        <div className="hidden md:flex gap-4 lg:gap-6 ml-12">
+          {menuItems.filter(item => item.visible).map((item) => {
+            const isActive = pathname === item.href;
+            return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-xl px-3 py-2 rounded-md hover:bg-blue-50 hover:text-blue-600 transition"
+                className={`relative text-lg px-6 py-3 rounded-xl transition-all duration-300
+                  ${isActive ? "text-white bg-blue-600 shadow-md" : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"}
+                `}
               >
                 {item.name}
+                {!isActive && (
+                  <span className="absolute bottom-2 left-0 w-0 h-[3px] bg-blue-600 transition-all duration-300 group-hover:w-full rounded-full"></span>
+                )}
               </Link>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         {/* Иконки + Login */}
-        <div className="hidden md:flex gap-4 items-center">
+        <div className="hidden md:flex gap-5 items-center">
           {!user ? (
             <>
               <Link
                 href="/company/register"
-                className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
               >
-                Add Your Company
+                Add Company
               </Link>
               <Link
                 href="/login"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
               >
                 Login
               </Link>
@@ -103,38 +105,37 @@ function Header() {
           ) : (
             <>
               <span
-                style={{ cursor: "pointer" }}
+                className="cursor-pointer text-gray-600 hover:text-blue-600 transition-all duration-300"
                 onClick={() => router.push("/profile")}
               >
-                <FaRegUserCircle size={30} />
+                <FaRegUserCircle size={36} />
               </span>
               <Link
                 href="/company/register"
-                className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
               >
-                Add Your Company
+                Add Company
               </Link>
               <button
                 onClick={signOutUser}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition"
+                className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
               >
                 Log out
               </button>
             </>
-
           )}
         </div>
 
         {/* Мобильный бургер */}
         <button
-          className="md:hidden p-2 rounded-md hover:bg-gray-100 transition"
+          className="md:hidden p-3 rounded-lg hover:bg-gray-100 transition-all duration-300"
           onClick={() => setMenuOpen(!menuOpen)}
         >
           <svg
-            className="w-6 h-6"
+            className="w-8 h-8 text-gray-800"
             fill="none"
             stroke="currentColor"
-            strokeWidth={2}
+            strokeWidth={2.5}
             viewBox="0 0 24 24"
           >
             <path
@@ -148,20 +149,20 @@ function Header() {
 
       {/* Мобильное меню */}
       {menuOpen && (
-        <div className="md:hidden bg-white shadow-md">
-          {menuItems.map((item) => (
+        <div className="md:hidden bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-lg">
+          {menuItems.filter(item => item.visible).map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="block px-6 py-3 hover:bg-gray-100"
+              className="block px-8 py-4 text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
               onClick={() => setMenuOpen(false)}
             >
               {item.name}
             </Link>
           ))}
           <Link
-            href="/login"
-            className="block px-6 py-3 bg-blue-600 text-white text-center rounded-b-lg hover:bg-blue-700"
+            href={user ? "/profile" : "/login"}
+            className="block mx-8 my-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
             onClick={() => setMenuOpen(false)}
           >
             {user ? "Profile" : "Login"}
@@ -175,10 +176,15 @@ function Header() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} bg-gray-50 text-gray-900 font-sans`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-gray-50 text-gray-900 font-sans antialiased`}
+      >
         <AuthProvider>
           <Header />
-          <main className="mx-auto p-6">{children}</main>
+          <main className="mx-auto max-w-8xl px-8 py-12">
+            {/* Welcome блок с логотипом ST */}
+            {children}
+          </main>
         </AuthProvider>
       </body>
     </html>

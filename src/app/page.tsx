@@ -102,17 +102,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-blue-900 mb-8">
     Welcome to
   </h1>
-
-  <div className="flex justify-center items-center">
-    <Image
-      src="/logo.png"
-      alt="Slotto Logo"
-      width={250}
-      height={80}
-      className="h-auto object-contain sm:w-64 md:w-72 lg:w-80"
-      priority
-    />
-  </div>
+  <Link href="/" className="flex items-center gap-3 justify-center">
+    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-extrabold shadow-lg">
+      ST
+    </div>
+    <span className="text-3xl font-bold text-gray-900 tracking-tight">Slotto</span>
+  </Link>
 
   <p className="text-base sm:text-lg md:text-xl my-8 font-bold text-gray-800">
     Book, manage and track your reservations all in one place.

@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import { collection, doc, getDocs, query, where, updateDoc, Timestamp } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, User } from "firebase/auth";
 import Popup from "@/components/Popup";
 import InfoPopup from "@/components/InfoPopup";
 import { FaTimes, FaEdit } from "react-icons/fa";
@@ -16,8 +16,8 @@ interface Reservation {
   clientEmail: string;
   companyId: string;
   serviceName: string;
-  startTime: any;
-  endTime: any;
+  startTime: Timestamp;
+  endTime: Timestamp;
   participants: number;
   location?: string;
   notes?: string;
@@ -32,7 +32,7 @@ interface Company {
 }
 
 const Reservations: FC = () => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [popupData, setPopupData] = useState<{ title: string; message: string; onConfirm?: () => void } | null>(null);
@@ -79,14 +79,14 @@ const Reservations: FC = () => {
   };
 
   const handleCancelClick = (res: Reservation) => {
-    const resDate = res.startTime.toDate();
-    const diffHours = (resDate.getTime() - new Date().getTime()) / (1000 * 60 * 60);
-    const canCancel = diffHours >= 24;
+    // const resDate = res.startTime.toDate();
+    // const diffHours = (resDate.getTime() - new Date().getTime()) / (1000 * 60 * 60);
+    // const canCancel = diffHours >= 24;
 
-    if (!canCancel) {
-      setInfoPopup({ title: "Cannot cancel", message: "You can only cancel reservations at least 24 hours in advance." });
-      return;
-    }
+    // if (!canCancel) {
+    //   setInfoPopup({ title: "Cannot cancel", message: "You can only cancel reservations at least 24 hours in advance." });
+    //   return;
+    // }
 
     setPopupData({
       title: "Cancel Reservation?",
@@ -181,8 +181,8 @@ const Reservations: FC = () => {
                 </button>
                 <button
                   onClick={() => handleCancelClick(res)}
-                  disabled={!canCancel}
-                  className={`p-2 rounded-full text-white ${canCancel ? "bg-red-600 hover:bg-red-700" : "bg-gray-400 cursor-not-allowed"}`}
+                  // disabled={!canCancel}
+                  className={`p-2 rounded-full text-white bg-red-600 hover:bg-red-700`}
                   title={canCancel ? "Cancel Reservation" : "Cannot cancel less than 24h before"}
                 >
                   <FaTimes />
