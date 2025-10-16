@@ -243,7 +243,7 @@ const handleCreate = async () => {
     await addDoc(
       collection(db, "companies", selectedCompany, "reservations"),
       reservation
-    );
+    )
 
     setInfoPopup({
       title: "✅ Success",
