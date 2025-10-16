@@ -8,20 +8,16 @@ import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Image from "next/image";
-
-import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { motion } from "framer-motion";
 import "swiper/css";
 import "swiper/css/navigation";
-import { Navigation } from "swiper/modules";
+import "swiper/css/pagination";
 import { FaHistory } from "react-icons/fa";
 import { IoPerson } from "react-icons/io5";
 import { RiAdminFill } from "react-icons/ri";
 import { MdEventAvailable } from "react-icons/md";
-
-
-
-
+import { Navigation } from "swiper/modules";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
