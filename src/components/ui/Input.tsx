@@ -1,4 +1,3 @@
-// components/CustomInput.tsx
 import React, { InputHTMLAttributes } from 'react';
 import clsx from 'clsx';
 
