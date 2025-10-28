@@ -18,7 +18,7 @@ enum Tab {
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<User | null >(null);
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Reservations);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +29,7 @@ export default function Dashboard() {
         const docRef = doc(db, "users", currentUser.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setUserData(docSnap.data());
+          setUserData(docSnap.data() as User);
         }
       } else {
         setUserData(null);

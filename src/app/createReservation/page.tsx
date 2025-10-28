@@ -21,33 +21,11 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import InfoPopup from "@/components/InfoPopup";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { Service } from "@/types/service";
+import { Employee } from "@/types/employee";
+import { Company } from "@/types/company";
+import { Participant } from "@/types/participant";
 
-interface Service {
-  id: string;
-  title: string;
-  price: number;
-}
-
-interface Company {
-  id: string;
-  name: string;
-  address?: string;
-}
-
-interface Employee {
-  id: string;
-  name: string;
-  position: string;
-}
-
-interface Participant {
-  name: string;
-  serviceId: string;
-  employeeId: string;
-  time: string;
-  date?: string;
-  isMain?: boolean; // главный клиент
-}
 
 const InputWithLabel: FC<
   { label: string; icon?: React.ReactNode; error?: string } & React.InputHTMLAttributes<HTMLInputElement>

@@ -181,7 +181,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <AuthProvider>
           <Header />
-          <main className="mx-auto max-w-8xl px-8 py-12">
+          <main className="mx-auto max-w-8xl px-6 py-6">
             {/* Welcome блок с логотипом ST */}
             {children}
           </main>

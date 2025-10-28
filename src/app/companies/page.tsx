@@ -6,15 +6,7 @@ import { collection, getDocs } from "firebase/firestore";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import { FaBuilding, FaChevronDown } from "react-icons/fa";
-
-interface Company {
-  id: string;
-  name: string;
-  category: string;
-  web: string;
-  description?: string;
-  photoURL?: string;
-}
+import { Company } from "@/types/company";
 
 const Companies: FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);

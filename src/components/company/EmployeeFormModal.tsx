@@ -5,6 +5,8 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import Button from "@/components/ui/Button";
 import EmployeeScheduleCalendar from "./EmployeeScheduleCalendar";
+import { Service } from "@/types/service";
+import { Employee } from "@/types/employee";
 
 export default function EmployeeFormModal({
   companyId,
@@ -14,10 +16,10 @@ export default function EmployeeFormModal({
   onEmployeeAdded,
 }: {
   companyId: string;
-  services: any[];
-  employee: any | null;
+  services: Service[];
+  employee: Employee | null;
   onClose: () => void;
-  onEmployeeAdded?: (emp: any) => void;
+  onEmployeeAdded?: (emp: Employee) => void;
 }) {
   const [name, setName] = useState(employee?.name || "");
   const [position, setPosition] = useState(employee?.position || "");
@@ -26,7 +28,7 @@ export default function EmployeeFormModal({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoURL, setPhotoURL] = useState(employee?.photoURL || "");
   const [selectedServices, setSelectedServices] = useState<string[]>(
-    employee?.servicesIds || []
+    employee?.services || []
   );
   const [saving, setSaving] = useState(false);
 

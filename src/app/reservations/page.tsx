@@ -8,28 +8,10 @@ import Popup from "@/components/Popup";
 import InfoPopup from "@/components/InfoPopup";
 import { FaTimes, FaEdit } from "react-icons/fa";
 import Input from "@/components/ui/Input";
+import { Reservation } from "@/types/reservation";
+import { Company } from "@/types/company";
 
-interface Reservation {
-  id: string;
-  userId: string;
-  clientName: string;
-  clientEmail: string;
-  companyId: string;
-  serviceName: string;
-  startTime: Timestamp;
-  endTime: Timestamp;
-  participants: number;
-  location?: string;
-  notes?: string;
-  price: number;
-  status: "pending" | "confirmed" | "cancelled";
-  paymentStatus: "unpaid" | "paid";
-}
 
-interface Company {
-  id: string;
-  name: string;
-}
 
 const Reservations: FC = () => {
   const [user, setUser] = useState<User | null>(null);

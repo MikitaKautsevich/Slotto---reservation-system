@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import {
   createUserWithEmailAndPassword,
   updateProfile,
   sendEmailVerification,
+  onAuthStateChanged,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
+import Link from "next/link";
+import Select from "@/components/ui/Select";
 
 enum RegisterRole {
   User = "user",
@@ -18,7 +22,7 @@ enum RegisterRole {
 }
 
 export default function RegisterPage() {
-  const [step, setStep] = useState(1);
+  const router = useRouter();
   const [form, setForm] = useState({
     fullName: "",
     role: RegisterRole.User,
@@ -27,6 +31,8 @@ export default function RegisterPage() {
     phone: "",
   });
 
+  const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (
@@ -38,6 +44,8 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
+
     try {
       const userCred = await createUserWithEmailAndPassword(
         auth,
@@ -58,144 +66,136 @@ export default function RegisterPage() {
       });
 
       await sendEmailVerification(userCred.user);
-
-      setStep(2); // Переход на шаг подтверждения
+      setEmailSent(true);
     } catch (err: any) {
-      setError(err.message);
+      console.error(err);
+      setError(getFriendlyErrorMessage(err.code));
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCheckVerification = async () => {
-    if (auth.currentUser) {
-      await auth.currentUser.reload();
-      if (auth.currentUser.emailVerified) {
-        setStep(3); // Переход на успех
-      } else {
-        setError("Your email is not verified yet. Please check your inbox.");
+  // Автопереход после подтверждения почты
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await user.reload();
+        if (user.emailVerified) {
+          router.push("/dashboard");
+        }
       }
-    }
-  };
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   return (
-    <Card className="max-w-md mx-auto">
-      {/* Progress bar */}
-      <div className="flex justify-between items-center mb-6">
-        {["Details", "Verify Email", "Success"].map((label, index) => {
-          const currentStep = index + 1;
-          const isActive = currentStep === step;
-          const isCompleted = currentStep < step;
+    <div className="flex flex-col items-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 relative overflow-hidden pb-20 min-h-screen justify-center">
+        {/* <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div> */}
+      <Card className="w-full max-w-md p-8 bg-white/80 backdrop-blur-lg shadow-2xl rounded-3xl border border-gray-100 relative z-10">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Get Started 🚀</h2>
+        <p className="text-gray-500 text-center mb-8">
+          Let’s create your new account to start your journey!
+        </p>
+        {!emailSent ? (
+          <form onSubmit={handleRegister} className="space-y-4">
+            <Input
+              name="fullName"
+              placeholder="Full Name"
+              value={form.fullName}
+              onChange={handleChange}
+              required
+            />
 
-          return (
-            <div key={label} className="flex-1 flex flex-col items-center">
-              <div
-                className={`w-10 h-10 flex items-center justify-center rounded-full border-2 font-bold transition ${
-                  isCompleted
-                    ? "bg-green-500 border-green-500 text-white"
-                    : isActive
-                    ? "bg-blue-600 border-blue-600 text-white"
-                    : "border-gray-300 text-gray-400"
-                }`}
-              >
-                {isCompleted ? "✓" : currentStep}
-              </div>
-              <span
-                className={`mt-2 text-sm ${
-                  isActive || isCompleted ? "text-blue-600" : "text-gray-400"
-                }`}
-              >
-                {label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+            <Select
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              options={[RegisterRole.User, RegisterRole.Company]}
+              className="w-full"
+            />
 
-      <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
 
-      {/* Step 1: ввод данных */}
-      {step === 1 && (
-        <form onSubmit={handleRegister} className="space-y-4">
-          <Input
-            name="fullName"
-            placeholder="Full Name"
-            value={form.fullName}
-            onChange={handleChange}
-            required
-          />
 
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          >
-            <option value={RegisterRole.User}>User</option>
-            <option value={RegisterRole.Company}>Company</option>
-          </select>
+            <Input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              type="tel"
+              name="phone"
+              placeholder="Phone Number"
+              value={form.phone}
+              onChange={handleChange}
+              required
+            />
 
-          <Input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            type="tel"
-            name="phone"
-            placeholder="Phone Number"
-            value={form.phone}
-            onChange={handleChange}
-            required
-          />
+            <Button
+              type="submit"
+              className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-semibold py-2.5 rounded-xl hover:shadow-lg hover:scale-[1.01] transition-transform"
+              disabled={loading}
+            >
+              {loading ? "Creating..." : "Register"}
+            </Button>
+          </form>
+        ) : (
+          <div className="text-center space-y-4">
+            <p className="text-gray-700">
+              ✅ Registration successful! Please check your email to confirm your account.
+            </p>
+            <p className="text-sm text-gray-500">
+              Once confirmed, you’ll be redirected to your dashboard automatically.
+            </p>
+          </div>
+        )}
 
-          <Button type="submit" className="w-full">
-            Register
-          </Button>
-        </form>
-      )}
+        {error && (
+          <p className="text-red-600 mt-4 text-center font-medium">{error}</p>
+        )}
 
-      {/* Step 2: подтверждение почты */}
-      {step === 2 && (
-        <div className="space-y-4 text-center">
-          <p className="text-gray-700">
-            We sent you a verification email. Please check your inbox and click
-            the link to confirm your email.
-          </p>
-          <Button
-            onClick={handleCheckVerification}
-            className="w-full bg-blue-600 text-white"
-          >
-            I confirmed my email
-          </Button>
-        </div>
-      )}
-
-      {/* Step 3: успех */}
-      {step === 3 && (
-        <div className="text-center space-y-4">
-          <p className="text-green-600 font-semibold text-lg">
-            🎉 Your account has been successfully created!
-          </p>
+        <p className="text-sm text-gray-600 text-center mt-6">
+          Already have an account?{" "}
           <a
             href="/login"
-            className="text-blue-600 underline hover:text-blue-800"
+            className="text-indigo-600 hover:underline font-semibold"
           >
-            Go to Login
+            Login
           </a>
-        </div>
-      )}
-
-      {error && <p className="text-red-600 mt-4">{error}</p>}
-    </Card>
+        </p>
+      </Card>
+    </div>
   );
+}
+
+function getFriendlyErrorMessage(code: string): string {
+  switch (code) {
+    case "auth/email-already-in-use":
+      return "Этот email уже зарегистрирован. Попробуйте войти или использовать другой адрес.";
+    case "auth/invalid-email":
+      return "Некорректный формат email.";
+    case "auth/weak-password":
+      return "Пароль слишком простой. Используйте минимум 6 символов.";
+    case "auth/missing-password":
+      return "Введите пароль.";
+    case "auth/network-request-failed":
+      return "Ошибка сети. Проверьте подключение к интернету.";
+    case "auth/too-many-requests":
+      return "Слишком много попыток. Попробуйте позже.";
+    default:
+      return "Произошла ошибка при регистрации. Попробуйте снова.";
+  }
 }

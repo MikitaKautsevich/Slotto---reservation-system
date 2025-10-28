@@ -15,17 +15,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers, FaFilter, FaDownload } from "react-icons/fa";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-interface Reservation {
-  id: string;
-  planName: string;
-  startDate: Date;
-  participants: number;
-  location?: string;
-  notes?: string;
-  price: number;
-  status: string;
-}
+import { Reservation } from "@/types/reservation";
 
 const PAGE_SIZE = 5;
 
@@ -72,20 +62,26 @@ const History: FC = () => {
           const data = doc.data();
           return {
             id: doc.id,
-            planName: data.planName,
-            startDate: data.startDate.toDate(),
+            userId: data.userId,
+            clientName: data.clientName,
+            clientEmail: data.clientEmail,
+            companyId: data.companyId,
+            serviceName: data.planName,
+            startTime: data.startDate,
+            endTime: data.endDate || data.startDate, // fallback to startDate if endDate is not available
             participants: data.participants,
             location: data.location,
             notes: data.notes,
             price: data.price,
             status: data.status,
+            paymentStatus: data.paymentStatus || 'pending' // default to 'pending' if not available
           };
         })
 
       //   .filter((r) => r.startDate < now);
 
       // фильтрация
-      if (filters.plan) list = list.filter((r) => r.planName === filters.plan);
+      if (filters.plan) list = list.filter((r) => r.serviceName === filters.plan);
       if (filters.status) list = list.filter((r) => r.status === filters.status);
       if (filters.search)
         list = list.filter(
@@ -107,7 +103,7 @@ const History: FC = () => {
     const csv = reservations
       .map(
         (r) =>
-          `${r.planName},${r.startDate.toISOString()},${r.participants},${r.location || ""},${
+          `${r.serviceName},${r.startTime.toDate()},${r.participants},${r.location || ""},${
             r.notes || ""
           },${r.price},${r.status}`
       )
@@ -150,7 +146,7 @@ const History: FC = () => {
         <Input
           placeholder="Search (location/notes)"
           value={filters.search}
-          onChange={(e: { target: { value: any; }; }) => setFilters({ ...filters, search: e.target.value })}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, search: e.target.value })}
         />
         <Button
           onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
@@ -173,12 +169,12 @@ const History: FC = () => {
               onClick={() => setShowDetails(res)}
             >
               <h3 className="text-lg font-semibold text-gray-800 flex justify-between">
-                {res.planName}
+                {res.serviceName}
                 <span
                   className={`px-3 py-1 text-xs rounded-full ${
-                    res.status === "completed"
+                    res.status === "confirmed"
                       ? "bg-green-100 text-green-700"
-                      : res.status === "canceled"
+                      : res.status === "cancelled"
                       ? "bg-red-100 text-red-700"
                       : "bg-yellow-100 text-yellow-700"
                   }`}
@@ -188,9 +184,9 @@ const History: FC = () => {
               </h3>
               <div className="text-sm text-gray-600 space-y-1 mt-2">
                 <p className="flex items-center gap-2">
-                  <FaCalendarAlt /> {res.startDate.toLocaleDateString()}{" "}
+                  <FaCalendarAlt /> {res.startTime.toDate().toLocaleDateString()}{" "}
                   <FaClock />{" "}
-                  {res.startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {res.startTime.toDate().toLocaleDateString([], { hour: "2-digit", minute: "2-digit" })}
                 </p>
                 <p className="flex items-center gap-2">
                   <FaUsers /> {res.participants} participant(s)
@@ -223,9 +219,9 @@ const History: FC = () => {
       {showDetails && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-lg">
-            <h3 className="text-xl font-bold mb-2">{showDetails.planName}</h3>
+            <h3 className="text-xl font-bold mb-2">{showDetails.serviceName}</h3>
             <p>
-              <strong>Date:</strong> {showDetails.startDate.toLocaleString()}
+              <strong>Date:</strong> {showDetails.startTime.toLocaleString()}
             </p>
             <p>
               <strong>Participants:</strong> {showDetails.participants}
