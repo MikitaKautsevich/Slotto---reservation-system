@@ -7,7 +7,6 @@ import "./globals.css";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
-import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { motion } from "framer-motion";
 import "swiper/css";
@@ -16,8 +15,12 @@ import "swiper/css/pagination";
 import { FaHistory } from "react-icons/fa";
 import { IoPerson } from "react-icons/io5";
 import { RiAdminFill } from "react-icons/ri";
-import { MdEventAvailable } from "react-icons/md";
 import { Navigation } from "swiper/modules";
+import { FaSearch } from "react-icons/fa";
+import { MdEventAvailable } from "react-icons/md";
+import { FaRegSmileBeam } from "react-icons/fa";
+
+
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
@@ -41,6 +44,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     { title: "Booking History", description: "Keep track of all your past bookings in one place.", icon: <FaHistory/> },
     { title: "Admin Management", description: "Manage your system easily with our intuitive interface.", icon: <RiAdminFill/> },
   ];
+
+    const steps = [
+    { title: "Search", description: "Find the service or professional you need.", image: <FaSearch /> },
+    { title: "Book", description: "Reserve your spot in just a few clicks.", image: <MdEventAvailable /> },
+    { title: "Enjoy", description: "Receive confirmation and enjoy the service hassle-free.", image: <FaRegSmileBeam /> },
+  ];
+
 
   const reviews = [
     {
@@ -154,6 +164,66 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
       </motion.section>
 
+            {/* How it Works */}
+      {/* <motion.section className="py-20 bg-gray-50" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
+        <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+        <div className="max-w-4xl mx-auto grid sm:grid-cols-3 gap-8 text-center">
+          {steps.map((step, idx) => (
+            <Card key={idx} className="p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+              <div className="text-4xl font-bold text-blue-600 mb-4">{idx + 1}</div>
+              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+              <p className="text-gray-700">{step.description}</p>
+            </Card>
+          ))}
+        </div>
+      </motion.section> */}
+
+      {/* How it Works Section */}
+      <motion.section
+        className="py-20 bg-gradient-to-b from-blue-50 to-white"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+      >
+        <h2 className="text-3xl font-bold text-center mb-16">How It Works</h2>
+
+        <div className="relative max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-8">
+          {steps.map((step, idx) => (
+            <div key={idx} className="flex flex-col items-center text-center relative">
+              {/* Step Icon/Image */}
+              <div className="w-20 h-20 flex items-center justify-center bg-blue-100 rounded-full mb-4 shadow-lg">
+                {step.image}
+              </div>
+
+              {/* Step Number */}
+              <div className="text-3xl font-bold text-blue-600 mb-2">{idx + 1}</div>
+
+              {/* Step Title */}
+              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+
+              {/* Step Description */}
+              <p className="text-gray-700 max-w-sm">{step.description}</p>
+
+              {/* Arrow (кроме последнего шага) */}
+              {idx < steps.length - 1 && (
+                <div className="hidden sm:block absolute right-[-60px] top-1/2 transform -translate-y-1/2">
+                  <svg
+                    className="w-12 h-12 text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </motion.section>
+
       {/* Reviews Section */}
       <motion.section
         className="py-20 max-w-6xl mx-auto px-6"
@@ -195,48 +265,74 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           ))}
         </Swiper>
       </motion.section>
+      {/* Footer */}
+      <footer className="mt-20 bg-gradient-to-b from-blue-100 to-blue-200 text-gray-800 py-12 px-6 rounded-t-3xl">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
 
-      {/* Contact Section */}
-      <motion.section
-        className="py-20 bg-gray-50"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <h2 className="text-3xl font-bold text-center mb-10">Contact Us</h2>
-        <div className="max-w-lg mx-auto space-y-4">
-          <Input
-            name="name"
-            placeholder="Your Name"
-            value={form.name}
-            onChange={handleChange}
-          />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-          <Input
-            name="email"
-            placeholder="Your Email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-          />
-          {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-          <textarea
-            name="message"
-            placeholder="Message"
-            className="w-full border border-gray-300 rounded-lg p-3 h-32 resize-none focus:ring-2 focus:ring-blue-400 outline-none"
-            value={form.message}
-            onChange={handleChange}
-          />
-          {errors.message && <p className="text-red-500 text-sm">{errors.message}</p>}
-          <Button
-            className="w-full bg-blue-600 text-white hover:bg-blue-700 transition"
-            onClick={handleSubmit}
-          >
-            Send Message
-          </Button>
+          {/* Brand */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-extrabold shadow-md">
+                ST
+              </div>
+              <span className="text-2xl font-bold text-gray-900 tracking-tight">Slotto</span>
+            </div>
+            <p className="text-gray-700 text-sm">
+              Book, manage, and track your reservations seamlessly — anytime, anywhere.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="font-semibold text-lg mb-3">Quick Links</h3>
+            <ul className="space-y-2">
+              <li><Link href="/" className="hover:text-blue-700 transition">Home</Link></li>
+              <li><Link href="/about" className="hover:text-blue-700 transition">About</Link></li>
+              <li><Link href="/contact" className="hover:text-blue-700 transition">Contact</Link></li>
+              <li><Link href="/login" className="hover:text-blue-700 transition">Login</Link></li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h3 className="font-semibold text-lg mb-3">Support</h3>
+            <ul className="space-y-2">
+              <li><Link href="/faq" className="hover:text-blue-700 transition">FAQ</Link></li>
+              <li><Link href="/help" className="hover:text-blue-700 transition">Help Center</Link></li>
+              <li><Link href="/terms" className="hover:text-blue-700 transition">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="hover:text-blue-700 transition">Privacy Policy</Link></li>
+            </ul>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <h3 className="font-semibold text-lg mb-3">Stay Updated</h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Get the latest news and exclusive offers.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                placeholder="Your email"
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                Subscribe
+              </button>
+            </div>
+          </div>
         </div>
-      </motion.section>
+
+        <div className="border-t border-blue-300 mt-10 pt-6 text-center text-sm text-gray-600">
+          <p>© {new Date().getFullYear()} Slotto. All rights reserved.</p>
+          <div className="mt-3 flex justify-center gap-4 text-xl">
+            <a href="#" className="hover:text-blue-600 transition"><i className="fab fa-facebook-f"></i></a>
+            <a href="#" className="hover:text-blue-600 transition"><i className="fab fa-twitter"></i></a>
+            <a href="#" className="hover:text-blue-600 transition"><i className="fab fa-instagram"></i></a>
+            <a href="#" className="hover:text-blue-600 transition"><i className="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
