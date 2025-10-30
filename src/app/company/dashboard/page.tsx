@@ -71,7 +71,6 @@ export default function CompanyDashboardPage() {
     }
   };
 
-  // Skeleton Loader
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -221,7 +220,7 @@ export default function CompanyDashboardPage() {
         </div>
 
         {/* Animated Tab Content */}
-        <main className="flex-1 p-6 md:p-10">
+        <main className="flex-1 px-6">
           <motion.div
             key={activeTab + (selectedCompany?.id || "")}
             initial={{ opacity: 0, y: 15 }}

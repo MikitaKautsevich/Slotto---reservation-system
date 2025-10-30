@@ -306,9 +306,8 @@ export default function CompanyServicesTab({ companyId }: { companyId: string })
     );
 
   return (
-    <div className="w-full p-4 sm:p-6">
+    <div>
       {/* список услуг */}
-      <div className="mb-6 space-y-4 bg-white rounded-2xl shadow-xl p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Services</h2>
       {/* фильтр по категориям */}
       <div className="flex bg-white flex-wrap gap-2 mb-7">
@@ -336,6 +335,7 @@ export default function CompanyServicesTab({ companyId }: { companyId: string })
           </button>
         ))}
       </div>
+      <div className="space-y-4 mb-10">
         {services.filter((s) =>
           selectedCategory === "all" ? true : s.category === selectedCategory
           ).map((service) => (

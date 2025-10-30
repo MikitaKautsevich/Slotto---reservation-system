@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { db, auth } from "@/lib/firebase";
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -121,14 +122,8 @@ export default function CompanyInfoTab({ companyId }: { companyId: string }) {
   if (!user) return <p className="text-red-500 text-center mt-10">Please log in to view company info.</p>;
 
   return (
-    <div className="w-full ">
-      {updated && (
-        <div className="absolute top-2 right-4 bg-green-500 text-white text-sm px-3 py-1 rounded-lg shadow-md animate-fade-in-out">
-          Updated successfully ✅
-        </div>
-      )}
-
-      <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl flex flex-col lg:flex-row gap-6 p-6 lg:p-8">
+    <div>
+      <div className="flex flex-col lg:flex-row gap-6 p-6 lg:p-8">
         {/* Фото компании */}
         <div
           className="w-full lg:w-48 h-48 border border-dashed border-gray-300 rounded-xl flex items-center justify-center overflow-hidden relative cursor-pointer"
@@ -136,7 +131,15 @@ export default function CompanyInfoTab({ companyId }: { companyId: string }) {
         >
           {photoURL ? (
             <>
-              <img src={photoURL} alt="Company" className="w-full h-full object-cover rounded-xl" />
+              <Image
+                src={photoURL}
+                alt="Company"
+                width={192}
+                height={192}
+                className="w-full h-full object-cover rounded-xl"
+              />
+
+              {/* <img src={photoURL} alt="Company" className="w-full h-full object-cover rounded-xl" /> */}
               <button
                 type="button"
                 onClick={(e) => {
