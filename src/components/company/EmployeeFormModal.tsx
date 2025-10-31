@@ -94,131 +94,166 @@ export default function EmployeeFormModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-5xl overflow-y-auto max-h-[90vh]">
-        <h2 className="text-xl font-semibold mb-4">
-          {employee ? "Edit Employee" : "New Employee"}
-        </h2>
-
-        <div className="space-y-4">
-          {/* Name */}
-          <div>
-            <label className="block font-medium mb-1">Name</label>
-            <input
-              type="text"
-              className="w-full border rounded-lg p-2"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          {/* Position */}
-          <div>
-            <label className="block font-medium mb-1">Position</label>
-            <input
-              type="text"
-              className="w-full border rounded-lg p-2"
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block font-medium mb-1">Email</label>
-            <input
-              type="email"
-              className="w-full border rounded-lg p-2"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="block font-medium mb-1">Phone</label>
-            <input
-              type="tel"
-              className="w-full border rounded-lg p-2"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-
-          {/* Photo */}
-          <div>
-            <label className="block font-medium mb-1">Photo</label>
-            <input
-              type="file"
-              accept="image/*"
-              className="w-full"
-              onChange={(e) => {
-                setPhotoFile(e.target.files?.[0] || null);
-                setPhotoURL(""); // если выбираем файл, очищаем URL
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Or paste image URL"
-              value={photoURL}
-              onChange={(e) => {
-                setPhotoURL(e.target.value);
-                setPhotoFile(null); // если вставляем URL, очищаем файл
-              }}
-              className="w-full border p-2 rounded mt-2"
-            />
-
-            {/* Preview */}
-            {(photoFile || photoURL) && (
-              <img
-                src={photoFile ? URL.createObjectURL(photoFile) : photoURL}
-                alt="Preview"
-                className="w-24 h-24 rounded-lg mt-2 object-cover"
-              />
-            )}
-          </div>
-
-          {/* Services */}
-          <div>
-            <p className="font-medium mb-2">Employee Services:</p>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-              {services.map((s) => (
-                <label key={s.id} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedServices.includes(s.id)}
-                    onChange={() => handleServiceToggle(s.id)}
-                  />
-                  {s.title}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Schedule Calendar */}
-          {employee?.id && (
-            <div>
-              <p className="font-medium mb-2">Work Schedule:</p>
-              <EmployeeScheduleCalendar
-                companyId={companyId}
-                employeeId={employee.id}
-              />
-            </div>
-          )}
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl overflow-y-auto max-h-[90vh] border border-gray-100">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-3">
+          <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+            {employee ? "Edit Employee" : "Add New Employee"} 👤
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700 transition-colors text-2xl font-bold"
+          >
+            ×
+          </button>
         </div>
 
+        {/* Form */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Left section */}
+                    <div className="space-y-4">
+            {/* Photo upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+              <div className="flex items-center gap-4">
+                {(photoFile || photoURL) ? (
+                  <img
+                    src={photoFile ? URL.createObjectURL(photoFile) : photoURL}
+                    alt="Preview"
+                    className="w-24 h-24 rounded-xl object-cover shadow-sm border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200">
+                    📷
+                  </div>
+                )}
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                    onChange={(e) => {
+                      setPhotoFile(e.target.files?.[0] || null);
+                      setPhotoURL("");
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Or paste image URL"
+                    value={photoURL}
+                    onChange={(e) => {
+                      setPhotoURL(e.target.value);
+                      setPhotoFile(null);
+                    }}
+                    className="mt-2 w-full rounded-xl border border-gray-200 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Services */}
+            <div>
+              <p className="block text-sm font-medium text-gray-700 mb-2">Services</p>
+              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-gray-100 p-3 bg-gray-50">
+                {services.map((s) => (
+                  <label
+                    key={s.id}
+                    className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-blue-600 transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedServices.includes(s.id)}
+                      onChange={() => handleServiceToggle(s.id)}
+                      className="accent-blue-600 w-4 h-4"
+                    />
+                    {s.title}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* Right section */}
+                    <div className="space-y-4">
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input
+                type="text"
+                placeholder="John Doe"
+                className="w-full rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            {/* Position */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+              <input
+                type="text"
+                placeholder="Hair Stylist"
+                className="w-full rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input
+                type="email"
+                placeholder="employee@email.com"
+                className="w-full rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <input
+                type="tel"
+                placeholder="+421 987 654 321"
+                className="w-full rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Schedule */}
+        {employee?.id && (
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Work Schedule</h3>
+            <div className="rounded-xl border border-gray-100 p-3 bg-gray-50">
+              <EmployeeScheduleCalendar companyId={companyId} employeeId={employee.id} />
+            </div>
+          </div>
+        )}
+
         {/* Buttons */}
-        <div className="flex justify-end gap-3 mt-6">
-          <Button onClick={onClose} className="bg-gray-200 text-gray-700">
+        <div className="flex justify-end gap-3 mt-8">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium transition-all duration-300"
+          >
             Cancel
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={handleSave}
             disabled={saving}
-            className="bg-blue-600 text-white"
+            className={`px-6 py-2.5 rounded-xl font-medium text-white shadow-md transition-all duration-300 ${
+              saving
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg"
+            }`}
           >
             {saving ? "Saving..." : "Save"}
-          </Button>
+          </button>
         </div>
       </div>
     </div>

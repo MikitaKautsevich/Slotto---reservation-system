@@ -15,21 +15,22 @@ import EmployeeFormModal from "./EmployeeFormModal";
 import { FaUser } from "react-icons/fa";
 import InfoPopup from "../InfoPopup";
 import Popup from "../Popup";
+import { Employee } from "@/types/employee";
+import { Service } from "@/types/service";
 
-// --- Employee Details Modal ---
 function EmployeeDetailsModal({
   employee,
   services,
   onClose,
 }: {
-  employee: any;
-  services: any[];
+  employee: Employee;
+  services: Service[];
   onClose: () => void;
 }) {
   if (!employee) return null;
 
   const employeeServices = services.filter((s) =>
-    (employee.servicesIds || []).includes(s.id)
+    (employee.services || []).includes(s.id)
   );
 
   return (
@@ -60,7 +61,7 @@ function EmployeeDetailsModal({
             <ul className="list-disc list-inside text-gray-700">
               {employeeServices.map((s) => (
                 <li key={s.id}>
-                  {s.title} <span className="text-sm text-gray-500">({s.category})</span>
+                  {s.title} <span className="text-sm text-gray-500">({s.title})</span>
                 </li>
               ))}
             </ul>
@@ -82,13 +83,13 @@ function EmployeeDetailsModal({
 export default function CompanyEmployeesTab({ companyId }: { companyId: string }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
 
   const [showModal, setShowModal] = useState(false);
-  const [editEmployee, setEditEmployee] = useState<any | null>(null);
+  const [editEmployee, setEditEmployee] = useState<Employee | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [viewEmployee, setViewEmployee] = useState<any | null>(null);
+  const [viewEmployee, setViewEmployee] = useState<Employee | null>(null);
 
   const [infoPopup, setInfoPopup] = useState<{ title: string; message: string } | null>(null);
 
@@ -136,7 +137,7 @@ export default function CompanyEmployeesTab({ companyId }: { companyId: string }
     return <p className="text-red-500 text-center mt-10">Please log in to view employees.</p>;
 
   return (
-    <div className="w-full p-4 sm:p-6">
+    <div>
       {/* Add Employee Button */}
       <div className="flex justify-end mb-6">
         <Button
@@ -149,60 +150,81 @@ export default function CompanyEmployeesTab({ companyId }: { companyId: string }
           + New Employee
         </Button>
       </div>
-
       {/* Employees List */}
       {employees.length === 0 ? (
-        <p className="text-gray-500 text-center">No employees yet</p>
+        <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+          <FaUser className="text-4xl mb-3 opacity-60" />
+          <p className="text-lg">No employees yet</p>
+        </div>
       ) : (
-        <div className="space-y-4 bg-white rounded-2xl shadow-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Employees</h2>
-          {employees.map((emp) => (
-            <div
-              key={emp.id}
-              className="bg-gray-50 rounded-xl p-4 flex justify-between items-start shadow-sm rounded-xl p-4 flex items-start gap-4 shadow hover:shadow-md transition cursor-pointer"
-              onClick={() => setViewEmployee(emp)}
-            >
-              {emp.photoURL ? (
-                <img
-                  src={emp.photoURL}
-                  alt={emp.name}
-                  className="w-20 h-20 object-cover rounded-xl"
-                />
-              ) : (
-                <div className="w-20 h-20 flex items-center justify-center bg-gray-200 rounded-xl">
-                  <FaUser className="text-gray-500 text-3xl" />
+        <div>
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+            👥 Employees
+            <span className="text-sm text-gray-500 font-normal">({employees.length})</span>
+          </h2>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {employees.map((emp) => (
+              <div
+                key={emp.id}
+                className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between"
+                onClick={() => setViewEmployee(emp)}
+              >
+                {/* Header with photo */}
+                <div className="flex items-center gap-4">
+                  {emp.photoURL ? (
+                    <img
+                      src={emp.photoURL}
+                      alt={emp.name}
+                      className="w-16 h-16 rounded-xl object-cover shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-200 to-gray-300">
+                      <FaUser className="text-gray-500 text-2xl" />
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="text-lg font-semibold text-gray-900">{emp.name}</p>
+                    <p className="text-sm text-gray-600">{emp.position}</p>
+                  </div>
                 </div>
-              )}
-              <div className="flex-1">
-                <p className="font-semibold text-gray-800">{emp.name}</p>
-                <p className="text-gray-600">{emp.position}</p>
-                <p className="text-gray-500 text-sm">
-                  {emp.email} | {emp.phone}
-                </p>
+
+                {/* Info */}
+                <div className="mt-4 text-sm text-gray-500">
+                  <p>
+                    📧 <span className="text-gray-700">{emp.email}</span>
+                  </p>
+                  <p>
+                    📞 <span className="text-gray-700">{emp.phone}</span>
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="mt-5 flex justify-end gap-3">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditEmployee(emp);
+                      setShowModal(true);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 hover:text-blue-700 transition-all duration-300"
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDeleteId(emp.id);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 hover:text-red-700 transition-all duration-300"
+                  >
+                    🗑 Delete
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditEmployee(emp);
-                    setShowModal(true);
-                  }}
-                  className="bg-blue-100 text-blue-700 px-4 py-1 rounded-lg text-sm font-medium hover:bg-blue-200"
-                >
-                  ✏️ Edit
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmDeleteId(emp.id);
-                  }}
-                  className="bg-red-600 text-red-700 px-4 py-1 rounded-lg text-sm font-medium hover:bg-red-700 hover:text-white"
-                >
-                  🗑 Delete
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
