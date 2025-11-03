@@ -7,10 +7,11 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 
 import CompanyInfoTab from "@/components/company/CompanyInfoTab";
-import CompanyServicesTab from "@/components/company/CompanyServicesTab";
-import CompanyEmployeesTab from "@/components/company/CompanyEmployeesTab";
+import { ServicesTab } from "@/components/company/services/ServicesTab";
+import { EmployeesTab } from "@/components/company/employeers/EmployeesTab";
 import CompanyReservations from "@/components/company/CompanyReservations";
 import { Company } from "@/types/company";
+import Select from "@/components/ui/Select";
 
 enum Tab {
   Info = "Overview",
@@ -48,7 +49,7 @@ export default function CompanyDashboardPage() {
       } catch (err) {
         console.error("Error loading companies:", err);
       } finally {
-        setTimeout(() => setLoading(false), 1000); // мягкая задержка загрузки
+        setTimeout(() => setLoading(false), 1000);
       }
     });
 
@@ -61,9 +62,9 @@ export default function CompanyDashboardPage() {
       case Tab.Info:
         return <CompanyInfoTab companyId={selectedCompany.id} />;
       case Tab.Services:
-        return <CompanyServicesTab companyId={selectedCompany.id} />;
+        return <ServicesTab companyId={selectedCompany.id} />;
       case Tab.Employees:
-        return <CompanyEmployeesTab companyId={selectedCompany.id} />;
+        return <EmployeesTab companyId={selectedCompany.id} />;
       case Tab.Reservations:
         return <CompanyReservations companyId={selectedCompany.id} />;
       default:
@@ -97,23 +98,16 @@ export default function CompanyDashboardPage() {
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
         {companies.length > 1 && (
-          <select
-            value={selectedCompany?.id || ""}
+          <Select
+            value={selectedCompany?.name || ""}
             onChange={(e) => {
-              const comp = companies.find((c) => c.id === e.target.value);
+              const comp = companies.find((c) => c.name === e.target.value);
               setSelectedCompany(comp ?? null);
             }}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-5 focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            {companies.map((comp) => (
-              <option key={comp.id} value={comp.id}>
-                {comp.name || "Unnamed Company"}
-              </option>
-            ))}
-          </select>
+            options={companies.map((comp) => comp.name || "Unnamed Company")}
+          />
         )}
-
-        <div className="space-y-2">
+        <div className="space-y-2 mt-6">
           {Object.values(Tab).map((tab) => (
             <button
               key={tab}

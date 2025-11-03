@@ -5,5 +5,5 @@ export interface Employee {
     email?: string;
     phone?: string;
     photoURL?: string;
-    services?: string[];
+    servicesIds?: string[];
 }

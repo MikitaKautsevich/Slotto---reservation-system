@@ -1,5 +1,8 @@
 export interface Service {
   id: string;
   title: string;
-  price: number;
+  price: number | string;
+  description?: string;
+  duration?: number | string;
+  category?: string;
 }
