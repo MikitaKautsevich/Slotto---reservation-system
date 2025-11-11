@@ -13,8 +13,8 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers, FaFilter, FaDownload } from "react-icons/fa";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Button from "@/components/custom/Button";
+import Input from "@/components/custom/Input";
 import { Reservation } from "@/types/reservation";
 
 const PAGE_SIZE = 5;

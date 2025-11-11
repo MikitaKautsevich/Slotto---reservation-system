@@ -4,10 +4,10 @@ import { FC, useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import { collection, doc, getDocs, query, where, updateDoc, Timestamp } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
-import Popup from "@/components/Popup";
-import InfoPopup from "@/components/InfoPopup";
+import Popup from "@/components/custom/Popup";
+import InfoPopup from "@/components/custom/InfoPopup";
 import { FaTimes, FaEdit } from "react-icons/fa";
-import Input from "@/components/ui/Input";
+import Input from "@/components/custom/Input";
 import { Reservation } from "@/types/reservation";
 import { Company } from "@/types/company";
 

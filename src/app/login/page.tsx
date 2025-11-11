@@ -5,9 +5,9 @@ import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from 
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
 
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import Card from "@/components/ui/Card";
+import Button from "@/components/custom/Button";
+import Input from "@/components/custom/Input";
+import Card from "@/components/custom/Card";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

@@ -1,5 +1,5 @@
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Button from "@/components/custom/Button";
+import Input from "@/components/custom/Input";
 
 
 export const BookPage = () => {

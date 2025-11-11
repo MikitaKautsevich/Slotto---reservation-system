@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Button from "@/components/ui/Button";
-import Popup from "@/components/Popup";
+import Button from "@/components/custom/Button";
+import Popup from "@/components/custom/Popup";
 import { db, auth } from "@/lib/firebase";
 import { collection, doc, getDocs, updateDoc, Timestamp, getDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
-import InfoPopup from "@/components/InfoPopup";
+import InfoPopup from "@/components/custom/InfoPopup";
 import { PricingPlan } from "@/types/pricingPlan";
 
 export default function PriceList() {

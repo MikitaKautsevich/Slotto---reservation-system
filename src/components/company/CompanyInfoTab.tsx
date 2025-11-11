@@ -5,9 +5,9 @@ import Image from "next/image";
 import { db, auth } from "@/lib/firebase";
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
-import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
-import Textarea from "@/components/ui/Textarea";
+import Input from "@/components/custom/Input";
+import Button from "@/components/custom/Button";
+import Textarea from "@/components/custom/Textarea";
 
 export default function CompanyInfoTab({ companyId }: { companyId: string }) {
   const [user, setUser] = useState<User | null>(null);
@@ -121,9 +121,7 @@ export default function CompanyInfoTab({ companyId }: { companyId: string }) {
 
   return (
     <div className="p-6 lg:p-10 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-5xl mx-auto">
-      {/* Header */}
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-        {/* Company Image */}
         <div
           className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden group hover:border-blue-500 transition cursor-pointer"
           onClick={() => fileInputRef.current?.click()}

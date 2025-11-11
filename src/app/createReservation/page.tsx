@@ -18,9 +18,9 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
-import InfoPopup from "@/components/InfoPopup";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import InfoPopup from "@/components/custom/InfoPopup";
+import Button from "@/components/custom/Button";
+import Input from "@/components/custom/Input";
 import { Service } from "@/types/service";
 import { Employee } from "@/types/employee";
 import { Company } from "@/types/company";

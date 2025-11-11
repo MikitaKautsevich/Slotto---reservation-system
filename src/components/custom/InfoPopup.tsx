@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, ReactNode, MouseEvent, useEffect } from "react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/custom/Button";
 
 interface InfoPopupProps {
   title: string;

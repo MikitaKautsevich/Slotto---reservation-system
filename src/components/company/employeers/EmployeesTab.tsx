@@ -11,14 +11,17 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
-import Button from "@/components/ui/Button";
+import Button from "@/components/custom/Button";
 import { AddEmployee } from "./AddEmployee";
 import { FaUser, FaSearch } from "react-icons/fa";
-import InfoPopup from "../../InfoPopup";
-import Popup from "../../Popup";
+import InfoPopup from "../../custom/InfoPopup";
+import Popup from "../../custom/Popup";
 import { Employee } from "@/types/employee";
 import { Service } from "@/types/service";
 import { EmployeeDetails } from "./EmployeeDetails";
+import Input from "@/components/custom/Input";
+import Select from "@/components/custom/Select";
+import { InfoMessage } from "@/components/custom/InfoMessage";
 
 export const EmployeesTab = ({ companyId }: { companyId: string }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -108,7 +111,7 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
       <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
         <div className="relative w-full sm:w-1/2">
           <FaSearch className="absolute left-3 top-3 text-gray-400" />
-          <input
+          <Input
             type="text"
             placeholder="Search employee by name..."
             value={searchTerm}
@@ -116,26 +119,21 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-700"
           />
         </div>
-        <select
+        <Select
           value={selectedDepartment}
           onChange={(e) => setSelectedDepartment(e.target.value)}
+          options={["all", ...departments]}
           className="border border-gray-200 rounded-xl py-2 px-4 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="all">All Positions</option>
-          {departments.map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       {/* Employees List */}
       {filteredEmployees.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-          <FaUser className="text-5xl mb-4 opacity-60" />
-          <p className="text-lg">No employees found</p>
-        </div>
+        <InfoMessage
+          type="info"
+          title="No Employees Found"
+          message="No employees match your search or filter criteria."
+        />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEmployees.map((emp) => (

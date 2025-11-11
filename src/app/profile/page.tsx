@@ -5,11 +5,11 @@ import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "firebase/auth";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Button from "@/components/custom/Button";
+import Input from "@/components/custom/Input";
 import { useRouter } from "next/navigation";
-import Popup from "@/components/Popup";
-import InfoPopup from "@/components/InfoPopup";
+import Popup from "@/components/custom/Popup";
+import InfoPopup from "@/components/custom/InfoPopup";
 import { FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 export default function ProfilePage() {

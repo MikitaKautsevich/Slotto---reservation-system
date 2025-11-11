@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
-import Button from "@/components/ui/Button";
+import Button from "@/components/custom/Button";
 import { useRouter } from "next/navigation";
 import { FaBuilding, FaChevronDown } from "react-icons/fa";
 import { Company } from "@/types/company";

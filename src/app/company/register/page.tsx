@@ -5,36 +5,47 @@ import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp, doc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
-import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
+import Input from "@/components/custom/Input";
+import Button from "@/components/custom/Button";
+import Card from "@/components/custom/Card";
+import Select from "@/components/custom/Select";
 
 const RegisterCompany: FC = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [name, setName] = useState("");
-  const [web, setWeb] = useState("");
-  const [address, setAddress] = useState("");
-  const [category, setCategory] = useState("barbershop");
+  const [form, setForm] = useState({
+    name: "",
+    web: "",
+    address: "",
+    category: "barbershop",
+  });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [info, setInfo] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
   }, []);
 
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
-    if (!name.trim()) newErrors.name = "Company name is required";
-    if (!web.trim()) newErrors.web = "Website or social link is required";
-    if (!address.trim()) newErrors.address = "Company address is required";
+    if (!form.name.trim()) newErrors.name = "Company name is required";
+    if (!form.web.trim()) newErrors.web = "Website or social link is required";
+    if (!form.address.trim()) newErrors.address = "Company address is required";
     return newErrors;
   };
 
-  const handleRegister = async () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!user) {
-      setInfo("You must be logged in to register a company");
+      setInfo("⚠️ Please log in to register your company.");
       return;
     }
 
@@ -46,12 +57,8 @@ const RegisterCompany: FC = () => {
 
     try {
       setLoading(true);
-
       const newCompanyRef = await addDoc(collection(db, "companies"), {
-        name,
-        web,
-        address,
-        category,
+        ...form,
         ownerId: user.uid,
         createdAt: Timestamp.now(),
       });
@@ -73,84 +80,83 @@ const RegisterCompany: FC = () => {
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg text-center">
-        <h2 className="text-3xl font-bold text-gray-800">Register Your Company</h2>
-        <p className="mt-2 text-gray-600">
-          Please log in to your account to register your company.
-        </p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100">
+        <Card className="w-full max-w-md p-8 bg-white/80 backdrop-blur-lg shadow-2xl rounded-3xl border border-gray-100 text-center">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Register Your Company</h2>
+          <p className="text-gray-500">Please log in to your account to continue.</p>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto bg-white p-8 rounded-2xl shadow-lg space-y-6">
-      <h2 className="text-3xl font-bold text-center text-gray-800">
-        Company Registration
-      </h2>
+    <div className="flex flex-col items-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 min-h-screen justify-center pb-20">
+      <Card className="w-full max-w-md p-8 bg-white/80 backdrop-blur-lg shadow-2xl rounded-3xl border border-gray-100 relative z-10">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+          Company Registration 🏢
+        </h2>
+        <p className="text-gray-500 text-center mb-8">
+          Create your company profile to access your business dashboard.
+        </p>
 
-      {info && <p className="text-center text-blue-600 font-semibold">{info}</p>}
+        {info && (
+          <p className="text-center text-indigo-600 font-semibold mb-4">{info}</p>
+        )}
 
-      {/* Company Name */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Company Name</label>
-        <Input
-          placeholder="BarberShop One"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={errors.name ? "border-red-500 focus:ring-red-500" : ""}
-        />
-        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-      </div>
+        <form onSubmit={handleRegister} className="space-y-4">
+          <Input
+            name="name"
+            placeholder="Company Name"
+            value={form.name}
+            onChange={handleChange}
+            className={errors.name ? "border-red-500 focus:ring-red-500" : ""}
+            required
+          />
+          {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
 
-      {/* Website */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Website / Social Link</label>
-        <Input
-          placeholder="https://instagram.com/barbershopone"
-          value={web}
-          onChange={(e) => setWeb(e.target.value)}
-          className={errors.web ? "border-red-500 focus:ring-red-500" : ""}
-        />
-        {errors.web && <p className="text-red-500 text-xs mt-1">{errors.web}</p>}
-      </div>
+          <Input
+            name="web"
+            placeholder="Website / Instagram"
+            value={form.web}
+            onChange={handleChange}
+            className={errors.web ? "border-red-500 focus:ring-red-500" : ""}
+            required
+          />
+          {errors.web && <p className="text-red-500 text-xs">{errors.web}</p>}
 
-      {/* Address */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Address</label>
-        <Input
-          placeholder="123 Main St, New York"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          className={errors.address ? "border-red-500 focus:ring-red-500" : ""}
-        />
-        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-      </div>
+          <Input
+            name="address"
+            placeholder="Address"
+            value={form.address}
+            onChange={handleChange}
+            className={errors.address ? "border-red-500 focus:ring-red-500" : ""}
+            required
+          />
+          {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
 
-      {/* Category */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Category</label>
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full border p-3 rounded-lg focus:ring focus:ring-blue-300"
-        >
-          <option value="barbershop">Barbershop</option>
-          <option value="coffee">Coffee Shop</option>
-          <option value="restaurant">Restaurant</option>
-          <option value="fitness">Fitness Club</option>
-          <option value="beauty">Beauty Salon</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
+          <Select
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            options={[
+              "barbershop",
+              "coffee",
+              "restaurant",
+              "fitness",
+              "beauty",
+              "other",
+            ]}
+          />
 
-      {/* Submit */}
-      <Button
-        onClick={handleRegister}
-        disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-lg shadow-md transition-all"
-      >
-        {loading ? "Registering..." : "Register Company"}
-      </Button>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-semibold py-2.5 rounded-xl hover:shadow-lg hover:scale-[1.01] transition-transform"
+          >
+            {loading ? "Registering..." : "Register Company"}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 };

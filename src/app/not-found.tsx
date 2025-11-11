@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Button from '@/components/ui/Button';
+import Button from '@/components/custom/Button';
 
 export default function NotFound() {
   return (

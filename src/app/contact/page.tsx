@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import Button from '@/components/custom/Button';
+import Input from '@/components/custom/Input';
 
 export default function ContactPage() {
   const [form, setForm] = useState({

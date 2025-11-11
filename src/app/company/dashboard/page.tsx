@@ -11,7 +11,9 @@ import { ServicesTab } from "@/components/company/services/ServicesTab";
 import { EmployeesTab } from "@/components/company/employeers/EmployeesTab";
 import CompanyReservations from "@/components/company/CompanyReservations";
 import { Company } from "@/types/company";
-import Select from "@/components/ui/Select";
+import Select from "@/components/custom/Select";
+import { DashboardSkeleton } from "./DashboardSkeleton";
+import { InfoMessage } from "@/components/custom/InfoMessage";
 
 enum Tab {
   Info = "Overview",
@@ -21,6 +23,7 @@ enum Tab {
 }
 
 export default function CompanyDashboardPage() {
+
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Info);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -73,30 +76,31 @@ export default function CompanyDashboardPage() {
   };
 
   if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="space-y-3 animate-pulse text-center">
-          <div className="h-6 bg-gray-300 rounded w-48 mx-auto" />
-          <div className="h-4 bg-gray-300 rounded w-64 mx-auto" />
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton/>;
 
   if (!user)
-    return <p className="text-red-500 text-center mt-10">Please log in to view your dashboard.</p>;
+    return <InfoMessage
+            type="info"
+            title="Not Logged In"
+            message="Please log in to view your dashboard"
+          />
+  
   if (companies.length === 0)
-    return <p className="text-gray-500 text-center mt-10">You don’t have any companies yet.</p>;
+    return <InfoMessage
+              type="info"
+              title="Companies Not Found"
+              message="You don’t have any companies yet."
+            /> 
+    // <p className="text-gray-500 text-center mt-10">You don’t have any companies yet.</p>;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Desktop Sidebar */}
       <motion.aside
         initial={{ x: -30, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         className="hidden md:flex flex-col w-64 p-6 bg-white border-r border-gray-200 shadow-sm"
       >
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-
         {companies.length > 1 && (
           <Select
             value={selectedCompany?.name || ""}
@@ -115,15 +119,14 @@ export default function CompanyDashboardPage() {
               className={`w-full text-left px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
                 activeTab === tab
                   ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-700 hover:bg-gray-100"
+                 : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               {tab}
             </button>
           ))}
-        </div>
+        </div>   
       </motion.aside>
-
       {/* Mobile Menu */}
       <AnimatePresence>
         {menuOpen && (
@@ -194,7 +197,6 @@ export default function CompanyDashboardPage() {
           </>
         )}
       </AnimatePresence>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Mobile Header */}

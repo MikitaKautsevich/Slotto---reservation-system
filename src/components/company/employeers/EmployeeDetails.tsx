@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Button from "@/components/ui/Button";
+import Button from "@/components/custom/Button";
 import { Employee } from "@/types/employee";
 import { Service } from "@/types/service";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,15 +42,12 @@ export const EmployeeDetails = ({
           transition={{ type: "spring", stiffness: 120, damping: 15 }}
           className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-lg relative overflow-hidden"
         >
-          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
           >
             <FaTimes size={18} />
           </button>
-
-          {/* Header */}
           <div className="flex flex-col items-center text-center mb-6">
             <div className="relative">
               <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 opacity-20 blur-md" />
@@ -77,8 +74,6 @@ export const EmployeeDetails = ({
               {isAvailable ? "Available" : "Busy"}
             </div>
           </div>
-
-          {/* Contact Info */}
           <div className="space-y-2 text-gray-700 mb-5">
             {employee.email && (
               <p className="flex items-center gap-2">
@@ -113,16 +108,12 @@ export const EmployeeDetails = ({
               <p className="text-gray-500 italic">No services assigned yet</p>
             )}
           </div>
-
-          {/* Bio / About section */}
           {employee.bio && (
             <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
               <p className="font-semibold text-gray-800 mb-2">About</p>
               <p className="text-gray-600 text-sm leading-relaxed">{employee.bio}</p>
             </div>
           )}
-
-          {/* Actions */}
           <div className="flex justify-center mt-8">
             <Button
               onClick={onClose}
