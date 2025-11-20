@@ -1,338 +1,256 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { Geist } from "next/font/google";
-import "./globals.css";
-import Card from "../components/custom/Card";
-import Input from "../components/custom/Input";
-import Button from "../components/custom/Button";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { motion } from "framer-motion";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-import { FaHistory } from "react-icons/fa";
+import { motion, useAnimation, useInView } from "framer-motion";
+import Lenis from "@studio-freight/lenis";
+import CompanyTypesSlider from "@/components/dashboard/CompanyTypesSlider";
+import { FaHistory, FaSearch, FaRegSmileBeam } from "react-icons/fa";
 import { IoPerson } from "react-icons/io5";
 import { RiAdminFill } from "react-icons/ri";
-import { Navigation } from "swiper/modules";
-import { FaSearch } from "react-icons/fa";
 import { MdEventAvailable } from "react-icons/md";
-import { FaRegSmileBeam } from "react-icons/fa";
+
+export default function HomePage({ children }) {
+  const heroRef = useRef(null);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const [slottoText, setSlottoText] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
 
 
+  useEffect(() => {
+    const lenis = new Lenis({ smooth: true, lerp: 0.1 });
+    function raf(t) {
+      lenis.raf(t);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+  }, []);
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+  // Typing effect for Slotto
+  useEffect(() => {
+    const fullText = "Slotto";
+    let index = 0;
+    const interval = setInterval(() => {
+      setSlottoText(fullText.slice(0, index + 1));
+      index++;
+      if (index === fullText.length) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setShowCursor(false);
+        }, 100);
+      }
+    }, 200); // медленная скорость
+    return () => clearInterval(interval);
+  }, []);
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
-};
+  const handleMouseMove = (e) => {
+    const rect = heroRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setMouse({
+      x: (e.clientX - rect.left - rect.width / 2) / 50,
+      y: (e.clientY - rect.top - rect.height / 2) / 50,
+    });
+  };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  hover: { scale: 1.05, boxShadow: "0px 10px 20px rgba(0,0,0,0.15)" },
-};
+  const FadeInSection = ({ children }) => {
+    const ref = useRef(null);
+    const inView = useInView(ref, { once: true, margin: "-50px" });
+    const controls = useAnimation();
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [errors, setErrors] = useState({ name: "", email: "", message: "" });
+    useEffect(() => {
+      if (inView) controls.start("visible");
+    }, [inView]);
+
+    return (
+      <motion.div
+        ref={ref}
+        initial="hidden"
+        animate={controls}
+        variants={{
+          hidden: { opacity: 0, y: 80 },
+          visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: "easeOut" } },
+        }}
+      >
+        {children}
+      </motion.div>
+    );
+  };
 
   const infoCards = [
-    { title: "Easy Booking", description: "Quickly reserve your spot without any hassle.", icon: <MdEventAvailable/> },
-    { title: "Booking History", description: "Keep track of all your past bookings in one place.", icon: <FaHistory/> },
-    { title: "Admin Management", description: "Manage your system easily with our intuitive interface.", icon: <RiAdminFill/> },
+    { title: "Easy Booking", description: "Quickly reserve your spot.", icon: <MdEventAvailable /> },
+    { title: "Booking History", description: "Track all your past bookings.", icon: <FaHistory /> },
+    { title: "Admin Management", description: "Manage the system effortlessly.", icon: <RiAdminFill /> },
   ];
 
-    const steps = [
-    { title: "Search", description: "Find the service or professional you need.", image: <FaSearch /> },
-    { title: "Book", description: "Reserve your spot in just a few clicks.", image: <MdEventAvailable /> },
-    { title: "Enjoy", description: "Receive confirmation and enjoy the service hassle-free.", image: <FaRegSmileBeam /> },
+  const steps = [
+    { title: "Search", description: "Find exactly what you need.", icon: <FaSearch /> },
+    { title: "Book", description: "Reserve instantly.", icon: <MdEventAvailable /> },
+    { title: "Enjoy", description: "Relax & get confirmation.", icon: <FaRegSmileBeam /> },
   ];
-
 
   const reviews = [
-    {
-      name: "Anna P.",
-      photo: <IoPerson/>,
-      rating: 5,
-      text: "The service is super convenient! I booked my spot quickly and got instant confirmation.",
-    },
-    {
-      name: "Ivan K.",
-      photo: <IoPerson/>,
-      rating: 4,
-      text: "I really liked the design and simplicity of use.",
-    },
-    {
-      name: "Maria S.",
-      photo: <IoPerson/>,
-      rating: 5,
-      text: "Excellent service! Highly recommended.",
-    },
+    { name: "Anna P.", text: "Super convenient! Instant confirmation.", rating: 5, icon: <IoPerson /> },
+    { name: "Ivan K.", text: "Love the design & simplicity.", rating: 4, icon: <IoPerson /> },
+    { name: "Maria S.", text: "Amazing service!", rating: 5, icon: <IoPerson /> },
   ];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const validateForm = () => {
-    let valid = true;
-    const newErrors = { name: "", email: "", message: "" };
-    if (!form.name) { newErrors.name = "Name is required"; valid = false; }
-    if (!form.email) { newErrors.email = "Email is required"; valid = false; }
-    else if (!/\S+@\S+\.\S+/.test(form.email)) { newErrors.email = "Email is invalid"; valid = false; }
-    if (!form.message) { newErrors.message = "Message is required"; valid = false; }
-    setErrors(newErrors);
-    return valid;
-  };
-
-  const handleSubmit = () => {
-    if (validateForm()) {
-      console.log("Form submitted:", form);
-      setForm({ name: "", email: "", message: "" });
-    }
-  };
-
   return (
-    <main className="w-full">
-      {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center min-h-[calc(100vh-100px)] text-center bg-gradient-to-b from-blue-100 to-white rounded-2xl">
-<motion.div
-  initial={{ opacity: 0, y: 50 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 1 }}
-  className="max-w-2xl px-4 text-center"
->
-  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-blue-900 mb-8">
-    Welcome to
-  </h1>
-  <Link href="/" className="flex items-center gap-3 justify-center">
-    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-extrabold shadow-lg">
-      ST
-    </div>
-    <span className="text-3xl font-bold text-gray-900 tracking-tight">Slotto</span>
-  </Link>
+    <main className="relative w-full overflow-hidden bg-[#030617] text-white">
+      {/* HERO SECTION */}
+      <section
+        ref={heroRef}
+        onMouseMove={handleMouseMove}
+        className="relative min-h-[110vh] flex flex-col items-center justify-center text-center px-6 z-10"
+      >
+        {/* Soft parallax glow */}
+        <motion.div
+          style={{ x: mouse.x * -15, y: mouse.y * -15 }}
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.08),transparent_70%)]"
+        />
 
-  <p className="text-base sm:text-lg md:text-xl my-8 font-bold text-gray-800">
-    Book, manage and track your reservations all in one place.
-  </p>
+        {/* Slotto typed title */}
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-7xl sm:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 leading-tight drop-shadow-lg"
+        >
+          {slottoText}
+          {showCursor && <span className="blinking-cursor">|</span>}
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="mt-3 max-w-2xl text-lg sm:text-xl font-semibold relative inline-block"
+        >
+          powered by{" "}
+          <motion.span
+            className="font-bold bg-gradient-to-r from-purple-400 via-pink-500 to-red-400 bg-clip-text text-transparent"
+            initial={{ backgroundPosition: "0% 50%" }}
+            animate={{ backgroundPosition: "100% 50%" }}
+            transition={{ duration: 3, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+          >
+            OKANO
+          </motion.span>
+        </motion.p>
 
-  <div className="flex flex-col sm:flex-row justify-center gap-4">
-    <a
-      href="/login"
-      className="px-6 py-3 sm:px-8 sm:py-4 bg-blue-600 text-white font-semibold rounded-xl shadow-lg transform transition hover:scale-105 hover:bg-blue-700"
-    >
-      Try it
-    </a>
-    <a
-      href="/contact"
-      className="px-6 py-3 sm:px-8 sm:py-4 bg-white border border-gray-300 text-gray-800 font-semibold rounded-xl shadow hover:scale-105 hover:bg-gray-100 transition"
-    >
-      Contact Us
-    </a>
-  </div>
-</motion.div>
+        <motion.p
+          initial={{ opacity: 0, y: 80 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 1 }}
+          className="text-xl sm:text-2xl text-white/70 mt-8 max-w-3xl"
+        >
+          A futuristic way to book, manage and explore services in the digital cosmos.
+        </motion.p>
 
-        <div className="absolute bottom-6 animate-bounce text-blue-800 font-bold">
-          ↓ Scroll
+        <motion.div
+          initial={{ opacity: 0, y: 80 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 1 }}
+          className="flex gap-6 mt-14"
+        >
+          <Link
+            href="/login"
+            className="px-10 py-4 bg-blue-600 rounded-2xl text-white text-lg font-semibold shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:bg-blue-700 transition-all hover:scale-105"
+          >
+            Try Now
+          </Link>
+          <Link
+            href="/contact"
+            className="px-10 py-4 bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl text-white shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:bg-white/10 transition-all hover:scale-105"
+          >
+            Contact Us
+          </Link>
+        </motion.div>
+
+        <div className="absolute bottom-14 text-white/50 text-xl animate-bounce tracking-widest">
+          SCROLL ↓
         </div>
       </section>
 
-      {/* Info Section */}
-      <motion.section
-        className="py-20 space-y-10 max-w-6xl mx-auto px-6"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={containerVariants}
-      >
-        <h2 className="text-3xl font-bold text-center">What You Can Do With Our Service</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {infoCards.map((card, idx) => (
-            <motion.div key={idx} variants={cardVariants} whileHover="hover">
-              <Card className="p-6 cursor-pointer transition-all">
-                <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xl font-semibold">{card.title}</h3>
-                <div className="">{card.icon}</div>
+      {/* INFO CARDS */}
+      <FadeInSection>
+        <section className="py-28 max-w-7xl mx-auto px-6">
+          <h2 className="text-5xl font-bold text-center text-white mb-20 drop-shadow-xl">
+            What You Can Do
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-12">
+            {infoCards.map((c, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.06, y: -6 }}
+                className="p-10 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-[0_0_50px_rgba(59,130,246,0.15)] group transition-all cursor-pointer"
+              >
+                <div className="text-5xl mb-6 text-blue-300 drop-shadow-lg">{c.icon}</div>
+                <h3 className="text-3xl font-semibold text-white mb-4">{c.title}</h3>
+                <p className="text-white/60 text-lg">{c.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      </FadeInSection>
+
+
+      <CompanyTypesSlider />
+
+      {/* HOW IT WORKS */}
+      <FadeInSection>
+        <section className="py-28 max-w-7xl mx-auto px-6">
+          <h2 className="text-5xl font-bold text-center text-white mb-24 drop-shadow-xl">
+            How It Works
+          </h2>
+
+          <div className="flex flex-col md:flex-row justify-center gap-14 text-center">
+            {steps.map((s, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.08, y: -8 }}
+                className="flex flex-col items-center p-10 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl transition-all"
+              >
+                <div className="w-24 h-24 bg-blue-500/20 text-blue-300 text-5xl flex items-center justify-center rounded-full mb-6">
+                  {s.icon}
                 </div>
-                <p className="text-gray-700">{card.description}</p>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
+                <h3 className="text-3xl text-white font-bold mb-3">{s.title}</h3>
+                <p className="text-white/60 text-lg">{s.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      </FadeInSection>
 
-            {/* How it Works */}
-      {/* <motion.section className="py-20 bg-gray-50" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }}>
-        <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
-        <div className="max-w-4xl mx-auto grid sm:grid-cols-3 gap-8 text-center">
-          {steps.map((step, idx) => (
-            <Card key={idx} className="p-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
-              <div className="text-4xl font-bold text-blue-600 mb-4">{idx + 1}</div>
-              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-              <p className="text-gray-700">{step.description}</p>
-            </Card>
-          ))}
-        </div>
-      </motion.section> */}
+      {/* REVIEWS */}
+      <FadeInSection>
+        <section className="py-28 max-w-7xl mx-auto px-6">
+          <h2 className="text-5xl font-bold text-center text-white mb-20 drop-shadow-xl">
+            User Reviews
+          </h2>
 
-      {/* How it Works Section */}
-      <motion.section
-        className="py-20 bg-gradient-to-b from-blue-50 to-white"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <h2 className="text-3xl font-bold text-center mb-16">How It Works</h2>
-
-        <div className="relative max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-8">
-          {steps.map((step, idx) => (
-            <div key={idx} className="flex flex-col items-center text-center relative">
-              {/* Step Icon/Image */}
-              <div className="w-20 h-20 flex items-center justify-center bg-blue-100 rounded-full mb-4 shadow-lg">
-                {step.image}
-              </div>
-
-              {/* Step Number */}
-              <div className="text-3xl font-bold text-blue-600 mb-2">{idx + 1}</div>
-
-              {/* Step Title */}
-              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-
-              {/* Step Description */}
-              <p className="text-gray-700 max-w-sm">{step.description}</p>
-
-              {/* Arrow (кроме последнего шага) */}
-              {idx < steps.length - 1 && (
-                <div className="hidden sm:block absolute right-[-60px] top-1/2 transform -translate-y-1/2">
-                  <svg
-                    className="w-12 h-12 text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* Reviews Section */}
-      <motion.section
-        className="py-20 max-w-6xl mx-auto px-6"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <h2 className="text-3xl font-bold text-center mb-10">User Reviews</h2>
-        <Swiper
-          modules={[Navigation]}
-          navigation
-          spaceBetween={20}
-          slidesPerView={1}
-          breakpoints={{
-            768: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
-          }}
-        >
-          {reviews.map((rev, idx) => (
-            <SwiperSlide key={idx}>
-              <Card className="p-6 flex flex-col items-start gap-4 cursor-pointer transition-all h-50">
-                <div className="flex items-center gap-3">
-                  <div className="">
-                    {rev.photo}
-                    </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-12">
+            {reviews.map((r, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="p-8 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-xl transition-all"
+              >
+                <div className="flex items-center gap-6 mb-6">
+                  <div className="text-4xl text-white">{r.icon}</div>
                   <div>
-                    <p className="font-semibold">{rev.name}</p>
-                    <div className="flex text-yellow-400">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i}>{i < rev.rating ? "★" : "☆"}</span>
-                      ))}
+                    <p className="text-white font-semibold text-xl">{r.name}</p>
+                    <div className="text-yellow-300 text-lg">
+                      {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
                     </div>
                   </div>
                 </div>
-                <p className="text-gray-700">{rev.text}</p>
-              </Card>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </motion.section>
-      {/* Footer */}
-      <footer className="mt-20 bg-gradient-to-b from-blue-100 to-blue-200 text-gray-800 py-12 px-6 rounded-t-3xl">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
-
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-extrabold shadow-md">
-                ST
-              </div>
-              <span className="text-2xl font-bold text-gray-900 tracking-tight">Slotto</span>
-            </div>
-            <p className="text-gray-700 text-sm">
-              Book, manage, and track your reservations seamlessly — anytime, anywhere.
-            </p>
+                <p className="text-white/70 text-lg">{r.text}</p>
+              </motion.div>
+            ))}
           </div>
+        </section>
+      </FadeInSection>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Quick Links</h3>
-            <ul className="space-y-2">
-              <li><Link href="/" className="hover:text-blue-700 transition">Home</Link></li>
-              <li><Link href="/about" className="hover:text-blue-700 transition">About</Link></li>
-              <li><Link href="/contact" className="hover:text-blue-700 transition">Contact</Link></li>
-              <li><Link href="/login" className="hover:text-blue-700 transition">Login</Link></li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Support</h3>
-            <ul className="space-y-2">
-              <li><Link href="/faq" className="hover:text-blue-700 transition">FAQ</Link></li>
-              <li><Link href="/help" className="hover:text-blue-700 transition">Help Center</Link></li>
-              <li><Link href="/terms" className="hover:text-blue-700 transition">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="hover:text-blue-700 transition">Privacy Policy</Link></li>
-            </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Stay Updated</h3>
-            <p className="text-sm text-gray-700 mb-4">
-              Get the latest news and exclusive offers.
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Your email"
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-blue-300 mt-10 pt-6 text-center text-sm text-gray-600">
-          <p>© {new Date().getFullYear()} Slotto. All rights reserved.</p>
-          <div className="mt-3 flex justify-center gap-4 text-xl">
-            <a href="#" className="hover:text-blue-600 transition"><i className="fab fa-facebook-f"></i></a>
-            <a href="#" className="hover:text-blue-600 transition"><i className="fab fa-twitter"></i></a>
-            <a href="#" className="hover:text-blue-600 transition"><i className="fab fa-instagram"></i></a>
-            <a href="#" className="hover:text-blue-600 transition"><i className="fab fa-linkedin-in"></i></a>
-          </div>
-        </div>
-      </footer>
+      {children}
     </main>
   );
 }

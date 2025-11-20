@@ -228,7 +228,7 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
               message="Please log in to view your dashboard"
             />
   return (
-    <div className="p-6 lg:p-10 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-5xl mx-auto">
+    <div className="p-6 lg:p-10 rounded-2xl shadow-sm border border-gray-100 max-w-5xl mx-auto">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Services Management</h2>
 
       {/* Category Filter */}

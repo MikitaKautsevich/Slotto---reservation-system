@@ -88,7 +88,7 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
     return <p className="text-red-500 text-center mt-10">Please log in to view employees.</p>;
 
   return (
-    <div className="h-svh p-6 lg:p-10 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-6xl mx-auto">
+    <div className="h-svh p-6 lg:p-10 rounded-2xl shadow-sm border border-gray-100 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
           👥 Employees

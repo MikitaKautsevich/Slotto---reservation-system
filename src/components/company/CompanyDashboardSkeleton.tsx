@@ -1,7 +1,7 @@
 
 
 
-export const DashboardSkeleton = () => {
+export const CompanyDashboardSkeleton = () => {
       return (
     <div className="flex min-h-screen bg-gray-50">
       <div className="hidden md:flex flex-col w-64 p-6 bg-white border-r border-gray-200 space-y-4 animate-pulse">

@@ -14,7 +14,7 @@ import { FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from "react-icons/fa"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [currentPassword, setCurrentPassword] = useState("");

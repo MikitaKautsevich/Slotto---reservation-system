@@ -1,39 +1,54 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import "../globals.css";
-import { getAuth, signOut } from "firebase/auth";
-import { FaRegUserCircle } from "react-icons/fa";
 import { useRouter, usePathname } from "next/navigation";
+import {
+  FaRegUserCircle,
+  FaBars,
+  FaTimes,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
+import { getAuth, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { useLocation } from "@/hooks/useLocation";
 
 export const Header = () => {
-
   const { user } = useAuth();
+  const { city, geoError } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [scrollY, setScrollY] = useState(0);
+
   const router = useRouter();
   const pathname = usePathname();
-  const [userRole, setUserRole] = useState<string | null>(null);
 
+  // Fetch user role
   useEffect(() => {
     const fetchUserRole = async () => {
       if (user?.uid) {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUserRole(data.role || null);
+          setUserRole(docSnap.data().role || null);
         }
       }
     };
     fetchUserRole();
   }, [user]);
 
+  // Scroll animation
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", visible: true },
     { name: "Company", href: "/company/dashboard", visible: userRole === "companyAdmin" },
-    { name: "Price List", href: "/priceList", visible: true },
     { name: "Contact", href: "/contact", visible: true },
   ];
 
@@ -44,135 +59,131 @@ export const Header = () => {
         setUserRole(null);
         router.push("/");
       })
-      .catch(console.log)
+      .catch(console.error);
   };
 
-  return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md shadow-sm">
-      <nav className="mx-auto flex max-w-8xl items-center justify-between px-6 lg:px-10 py-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-11 h-11 flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-extrabold text-lg shadow-md group-hover:scale-105 transition-transform">
-            ST
-          </div>
-          <span className="text-2xl font-bold text-gray-900 tracking-tight group-hover:text-blue-700 transition-colors">
-            Slotto
-          </span>
-        </Link>
+  const bgOpacity = Math.min(0.9, 0.3 + scrollY / 600);
+  const backdropBlur = scrollY > 50 ? "backdrop-blur-md" : "backdrop-blur-sm";
 
-        {/* Desktop menu */}
-        <div className="hidden md:flex items-center gap-1 lg:gap-3 ml-8">
-          {menuItems.filter(i => i.visible).map(item => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-5 py-2 rounded-xl text-base font-medium transition-all duration-300
-                  ${isActive
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
-                    : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                  }`}
-              >
-                {item.name}
-              </Link>
-            );
-          })}
+  return (
+    <header
+      className="fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b border-white/5"
+      style={{ backgroundColor: `rgba(3, 6, 23, ${bgOpacity})` }}
+    >
+      <nav
+        className={`max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-4 ${backdropBlur}`}
+      >
+        {/* Logo + Location */}
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold text-lg shadow-md transition-transform hover:scale-110">
+              ST
+            </div>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 font-bold text-2xl tracking-wide">
+              Slotto
+            </span>
+          </Link>
+
+          {/* Location badge */}
+          <div className="hidden md:flex items-center gap-2 text-white/80 text-sm bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-all">
+            <FaMapMarkerAlt className="text-red-400 text-sm" />
+            <span className="font-medium">
+              {geoError ? "Allow location" : city || "Detecting..."}
+            </span>
+          </div>
         </div>
 
-        {/* Right side */}
-      <div className="hidden md:flex items-center gap-4">
-  {!user ? (
-    <>
-      <Link
-        href="/company/register"
-        className="relative inline-flex items-center justify-center px-5 py-2.5 overflow-hidden font-medium text-white rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 shadow-md hover:scale-[1.03] hover:shadow-lg transition-all duration-300 group"
-      >
-        <span className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-        <span className="relative">Add Company</span>
-      </Link>
+        {/* Desktop menu */}
+        <div className="hidden md:flex items-center gap-6">
+          {menuItems
+            .filter((i) => i.visible)
+            .map((item, index) => {
+              const isActive = pathname === item.href;
 
-      <Link
-        href="/login"
-        className="relative inline-flex items-center justify-center px-5 py-2.5 overflow-hidden font-medium text-white rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-indigo-700 shadow-md hover:scale-[1.03] hover:shadow-lg transition-all duration-300 group"
-      >
-        <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-        <span className="relative">Login</span>
-      </Link>
-    </>
-  ) : (
-    <>
-      <FaRegUserCircle
-        size={34}
-        onClick={() => router.push("/profile")}
-        className="cursor-pointer text-gray-600 hover:text-blue-600 transition-colors"
-      />
+              return (
+                <div key={item.href} className="flex items-center">
+                  {/* Divider between links */}
+                  {index !== 0 && (
+                    <div className="w-px h-5 bg-white/10 mx-3"></div>
+                  )}
 
-      <Link
-        href="/company/register"
-        className="relative inline-flex items-center justify-center px-5 py-2.5 overflow-hidden font-medium text-white rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 shadow-md hover:scale-[1.03] hover:shadow-lg transition-all duration-300 group"
-      >
-        <span className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-        <span className="relative">Add Company</span>
-      </Link>
+                  <Link href={item.href}>
+                    <span
+                      className={`
+                        relative text-white/80 font-medium tracking-wide text-base
+                        transition-all duration-300 cursor-pointer
+                        hover:text-white/100
+                      `}
+                    >
+                      {item.name}
 
-      <button
-        onClick={handleSignOut}
-        className="relative inline-flex items-center justify-center px-5 py-2.5 overflow-hidden font-medium text-white rounded-xl bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 shadow-md hover:scale-[1.03] hover:shadow-lg transition-all duration-300 group"
-      >
-        <span className="absolute inset-0 bg-gradient-to-r from-orange-400 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-        <span className="relative">Log out</span>
-      </button>
-    </>
-  )}
-      </div>
+                      {/* Animated underline */}
+                      <span
+                        className={`
+                          absolute left-0 -bottom-1 h-[2px] bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all
+                          ${isActive ? "w-full opacity-100" : "w-0 opacity-0 group-hover:w-full"}
+                        `}
+                      ></span>
+                    </span>
+                  </Link>
+                </div>
+              );
+            })}
 
-        {/* Mobile burger */}
+          {/* Profile icon */}
+          {user ? (
+            <FaRegUserCircle
+              size={28}
+              onClick={() => router.push("/profile")}
+              className="text-white/80 hover:text-white cursor-pointer transition-all hover:scale-110"
+            />
+          ) : (
+            <Link
+              href="/login"
+              className="px-4 py-2 text-white border border-white/20 rounded-xl hover:bg-white/10 shadow-sm transition-all"
+            >
+              Login
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile menu button */}
         <button
-          className="md:hidden p-3 rounded-lg hover:bg-gray-100 transition-all duration-300"
+          className="md:hidden text-white text-3xl focus:outline-none"
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          <svg
-            className="w-8 h-8 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-            />
-          </svg>
+          {menuOpen ? <FaTimes /> : <FaBars />}
         </button>
       </nav>
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white/95 backdrop-blur-md shadow-lg animate-fade-in">
-          {menuItems.filter(i => i.visible).map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMenuOpen(false)}
-              className="block px-8 py-4 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
-            >
-              {item.name}
-            </Link>
-          ))}
+        <div className="md:hidden fixed top-16 left-0 w-full bg-[#030617]/95 backdrop-blur-xl border-t border-white/10 flex flex-col items-center py-6 space-y-4 animate-[fadeIn_0.3s_ease]">
+          {menuItems
+            .filter((i) => i.visible)
+            .map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="text-white/90 text-xl font-semibold tracking-wide hover:text-blue-400 transition-colors"
+              >
+                {item.name}
+              </Link>
+            ))}
 
           {user ? (
             <button
               onClick={handleSignOut}
-              className="block mx-8 my-4 w-[calc(100%-4rem)] px-6 py-3 text-white text-center rounded-xl bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 shadow-md hover:scale-[1.03] hover:shadow-lg transition-all duration-300"
+              className="px-6 py-2 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-all"
             >
-              Log out
+              Logout
             </button>
           ) : (
             <Link
               href="/login"
-              className="block mx-8 my-4 w-[calc(100%-4rem)] px-6 py-3 text-white text-center rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-indigo-700 shadow-md hover:scale-[1.03] hover:shadow-lg transition-all duration-300"
+              onClick={() => setMenuOpen(false)}
+              className="px-6 py-2 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-all"
             >
               Login
             </Link>
@@ -181,4 +192,4 @@ export const Header = () => {
       )}
     </header>
   );
-}
+};

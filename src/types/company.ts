@@ -4,6 +4,8 @@ export interface Company {
   category?: string;
   web?: string;
   description?: string;
+  location?: string;
+  rating?: number | null;
   photoURL?: string;
   address?: string;
 }

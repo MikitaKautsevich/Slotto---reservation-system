@@ -2,208 +2,84 @@
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
-import Reservations from "../reservations/page";
-import Companies from "../companies/page";
-import CreateReservation from "../createReservation/page";
-import History from "../history/page";
+import Top5Places from "@/components/dashboard/Top5Places";
+import CompanyTypesSlider from "@/components/dashboard/CompanyTypesSlider";
+import CompaniesGrid from "@/components/dashboard/CompaniesGrid";
+import { Loading } from "../Loading";
+import { Company } from "@/types/company";
+import AmbientCanvas from "@/components/dashboard/AmbientCanvas";
+import KPIStats from "@/components/dashboard/KPIStats";
+import SpotlightSearch from "@/components/dashboard/SpotlightSearch";
 
-enum Tab {
-  Reservations = "Reservations",
-  Companies = "Companies",
-  CreateReservation = "Create Reservation",
-  History = "History",
-}
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<User | null >(null);
-  const [activeTab, setActiveTab] = useState<Tab>(Tab.Reservations);
   const [loading, setLoading] = useState(true);
+
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+
       if (currentUser) {
         const docRef = doc(db, "users", currentUser.uid);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUserData(docSnap.data() as User);
-        }
+        if (docSnap.exists()) setUser(docSnap.data() as User);
       } else {
-        setUserData(null);
+        setUser(null);
       }
+
+      const companiesSnap = await getDocs(collection(db, "companies"));
+      setCompanies(
+        companiesSnap.docs.map((doc) => {
+          const data = doc.data() as Company;
+          if (!data.id) data.id = doc.id;
+          return data;
+        })
+      );
+
       setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  const top5Places = companies
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 5);
+
+  const filteredCompanies = companies.filter((c) =>
+    c.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+
+  if (loading) return <Loading/>;
   if (!user) return <p className="text-center mt-10">Please log in first.</p>;
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case Tab.Reservations: return <Reservations />;
-      case Tab.Companies: return <Companies />;
-      case Tab.CreateReservation: return <CreateReservation />;
-      case Tab.History: return <History />;
-    }
-  };
+    return (
+  <div className="min-h-screen p-8 space-y-20 relative">
 
-  return (
-    <div className="flex min-h-[calc(100vh-100px)] bg-gray-100">
-      <nav className="w-64 p-6 bg-white rounded-xl shadow-md space-y-4 flex flex-col my-6 ml-6">
-        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-        {Object.values(Tab).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`text-left px-4 py-2 rounded-lg font-medium transition ${
-              activeTab === tab
-                ? "bg-blue-600 text-white"
-                : "text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </nav>
+    {/* <header>
+      <h1 className="text-4xl font-extrabold text-gray-900">Explore Places</h1>
+      <p className="text-gray-500 text-lg mt-2">
+        Discover experiences and find top-rated companies near you.
+      </p>
+    </header> */}
 
-      {/* Контент */}
-      <main className="flex-1 p-6">
-        {renderTabContent()}
-      </main>
-    </div>
-  );
+    <KPIStats companies={companies} />
+
+    <Top5Places places={top5Places} />
+
+    <SpotlightSearch value={search} onChange={setSearch} />
+
+    <CompaniesGrid companies={filteredCompanies} />
+
+    <CompanyTypesSlider />
+
+  </div>
+);
 }
-
-
-
-
-
-
-
-
-
-
-// 'use client';
-
-// import { useEffect, useState } from "react";
-// import { auth, db } from "@/lib/firebase";
-// import { doc, getDoc } from "firebase/firestore";
-// import { onAuthStateChanged, User } from "firebase/auth";
-// import Reservations from "../reservations/page";
-// import Companies from "../companies/page";
-// import CreateReservation from "../createReservation/page";
-// import History from "../history/page";
-// import { FaBars, FaTimes } from "react-icons/fa";
-
-// enum Tab {
-//   Reservations = "Reservations",
-//   Companies = "Companies",
-//   CreateReservation = "Create Reservation",
-//   History = "History",
-// }
-
-// export default function Dashboard() {
-//   const [user, setUser] = useState<User | null>(null);
-//   const [userData, setUserData] = useState<any>(null);
-//   const [activeTab, setActiveTab] = useState<Tab>(Tab.Reservations);
-//   const [loading, setLoading] = useState(true);
-//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-//   useEffect(() => {
-//     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-//       setUser(currentUser);
-//       if (currentUser) {
-//         const docRef = doc(db, "users", currentUser.uid);
-//         const docSnap = await getDoc(docRef);
-//         if (docSnap.exists()) {
-//           setUserData(docSnap.data());
-//         }
-//       } else {
-//         setUserData(null);
-//       }
-//       setLoading(false);
-//     });
-//     return () => unsubscribe();
-//   }, []);
-
-//   if (loading) return <p className="text-center mt-10">Loading...</p>;
-//   if (!user) return <p className="text-center mt-10">Please log in first.</p>;
-
-//   const renderTabContent = () => {
-//     switch (activeTab) {
-//       case Tab.Reservations: return <Reservations />;
-//       case Tab.Companies: return <Companies />;
-//       case Tab.CreateReservation: return <CreateReservation />;
-//       case Tab.History: return <History />;
-//     }
-//   };
-
-//   const tabs = Object.values(Tab);
-
-//   return (
-//     <div className="flex min-h-screen bg-gray-100">
-
-//       {/* Мобильная кнопка для открытия меню */}
-//       <div className="md:hidden fixed top-4 left-4 z-50">
-//         <button
-//           onClick={() => setIsSidebarOpen(true)}
-//           className="p-2 rounded-md bg-blue-600 text-white"
-//         >
-//           <FaBars size={20} />
-//         </button>
-//       </div>
-
-//       {/* Sidebar */}
-//       <nav
-//         className={`
-//           fixed md:relative top-0 left-0 z-40 h-full w-64 bg-white p-6 space-y-4 shadow-md
-//           transform transition-transform duration-300
-//           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
-//         `}
-//       >
-//         <div className="flex justify-between md:block mb-6">
-//           <h1 className="text-2xl font-bold">Dashboard</h1>
-//           {/* Кнопка закрытия на мобилке */}
-//           <button
-//             className="md:hidden mt-2 p-2 text-gray-600"
-//             onClick={() => setIsSidebarOpen(false)}
-//           >
-//             <FaTimes size={20} />
-//           </button>
-//         </div>
-
-//         {tabs.map(tab => (
-//           <button
-//             key={tab}
-//             onClick={() => {
-//               setActiveTab(tab);
-//               setIsSidebarOpen(false); // закрываем sidebar на мобилке
-//             }}
-//             className={`text-left px-4 py-2 rounded-lg font-medium transition w-full ${
-//               activeTab === tab
-//                 ? "bg-blue-600 text-white"
-//                 : "text-gray-700 hover:bg-gray-200"
-//             }`}
-//           >
-//             {tab}
-//           </button>
-//         ))}
-//       </nav>
-
-//       {/* Overlay для мобильного меню */}
-//       {isSidebarOpen && (
-//         <div
-//           className="fixed inset-0 bg-black/30 z-30 md:hidden"
-//           onClick={() => setIsSidebarOpen(false)}
-//         ></div>
-//       )}
-
-//       {/* Контент */}
-//       <main className="flex-1 p-6 md:ml-64">{renderTabContent()}</main>
-//     </div>
-//   );
-// }

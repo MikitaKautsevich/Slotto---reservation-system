@@ -120,7 +120,7 @@ export default function CompanyInfoTab({ companyId }: { companyId: string }) {
   if (!user) return <p className="text-red-500 text-center mt-10">Please log in to view company info.</p>;
 
   return (
-    <div className="p-6 lg:p-10 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-5xl mx-auto">
+    <div className="p-6 lg:p-10 rounded-2xl shadow-sm border border-gray-100 max-w-5xl mx-auto">
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
         <div
           className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden group hover:border-blue-500 transition cursor-pointer"

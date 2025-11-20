@@ -12,7 +12,7 @@ import { EmployeesTab } from "@/components/company/employeers/EmployeesTab";
 import CompanyReservations from "@/components/company/CompanyReservations";
 import { Company } from "@/types/company";
 import Select from "@/components/custom/Select";
-import { DashboardSkeleton } from "./DashboardSkeleton";
+import { CompanyDashboardSkeleton } from "../../../components/company/CompanyDashboardSkeleton";
 import { InfoMessage } from "@/components/custom/InfoMessage";
 
 enum Tab {
@@ -76,7 +76,7 @@ export default function CompanyDashboardPage() {
   };
 
   if (loading)
-    return <DashboardSkeleton/>;
+    return <CompanyDashboardSkeleton/>;
 
   if (!user)
     return <InfoMessage
@@ -94,13 +94,13 @@ export default function CompanyDashboardPage() {
     // <p className="text-gray-500 text-center mt-10">You don’t have any companies yet.</p>;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen">
       <motion.aside
         initial={{ x: -30, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="hidden md:flex flex-col w-64 p-6 bg-white border-r border-gray-200 shadow-sm"
+        className="hidden md:flex flex-col w-64 p-6 border-r border-gray-200 shadow-sm"
       >
-        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        <h1 className="text-2xl  font-bold mb-6">Dashboard</h1>
         {companies.length > 1 && (
           <Select
             value={selectedCompany?.name || ""}
@@ -132,14 +132,14 @@ export default function CompanyDashboardPage() {
         {menuOpen && (
           <>
             <motion.div
-              className="fixed inset-0 bg-black bg-opacity-40 z-30"
+              className="fixed inset-0 bg-opacity-40 z-30"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMenuOpen(false)}
             />
             <motion.nav
-              className="fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-40 p-6 flex flex-col space-y-4"
+              className="fixed top-0 left-0 h-full w-64 shadow-xl z-40 p-6 flex flex-col space-y-4"
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
@@ -200,7 +200,7 @@ export default function CompanyDashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Mobile Header */}
-        <div className="md:hidden flex items-center justify-between bg-white shadow-sm p-4 sticky top-0 z-20 border-b">
+        <div className="md:hidden flex items-center justify-between shadow-sm p-4 sticky top-0 z-20 border-b">
           <h1 className="text-lg font-bold">{selectedCompany?.name || "Company Dashboard"}</h1>
           <button onClick={() => setMenuOpen(true)}>
             <svg
@@ -223,7 +223,7 @@ export default function CompanyDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.35 }}
-            className="bg-white rounded-2xl shadow-md p-6 md:p-8"
+            className="rounded-2xl shadow-md p-6 md:p-8"
           >
             {renderContent()}
           </motion.div>
