@@ -75,7 +75,6 @@ export default function RegisterPage() {
     }
   };
 
-  // Автопереход после подтверждения почты
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -89,24 +88,31 @@ export default function RegisterPage() {
   }, [router]);
 
   return (
-    <div className="flex flex-col items-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 relative overflow-hidden pb-20 min-h-screen justify-center">
-        {/* <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div> */}
-      <Card className="w-full max-w-md p-8 bg-white/80 backdrop-blur-lg shadow-2xl rounded-3xl border border-gray-100 relative z-10">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Get Started 🚀</h2>
-        <p className="text-gray-500 text-center mb-8">
-          Let’s create your new account to start your journey!
+    <div className="flex items-center justify-center min-h-screen relative overflow-hidden px-6 bg-black/5">
+
+      {/* Neon background blobs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-[450px] h-[450px] bg-purple-600/20 rounded-full blur-[130px]" />
+      </div>
+
+      <Card className="w-full max-w-md p-10 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl relative z-10">
+        <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+          Create Account 🚀
+        </h2>
+        <p className="text-center text-white/60 mt-2 mb-8">
+          Fill in the details to start your journey
         </p>
+
         {!emailSent ? (
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-5">
             <Input
               name="fullName"
               placeholder="Full Name"
               value={form.fullName}
               onChange={handleChange}
               required
+              className="bg-white/5 border-white/20 text-white placeholder-white/40 focus:ring-purple-500"
             />
 
             <Select
@@ -114,10 +120,8 @@ export default function RegisterPage() {
               value={form.role}
               onChange={handleChange}
               options={[RegisterRole.User, RegisterRole.Company]}
-              className="w-full"
+              className="w-full bg-white/5 border-white/20 text-white placeholder-white/40 focus:ring-purple-500"
             />
-
-
 
             <Input
               type="email"
@@ -126,6 +130,7 @@ export default function RegisterPage() {
               value={form.email}
               onChange={handleChange}
               required
+              className="bg-white/5 border-white/20 text-white placeholder-white/40 focus:ring-purple-500"
             />
             <Input
               type="password"
@@ -134,6 +139,7 @@ export default function RegisterPage() {
               value={form.password}
               onChange={handleChange}
               required
+              className="bg-white/5 border-white/20 text-white placeholder-white/40 focus:ring-purple-500"
             />
             <Input
               type="tel"
@@ -142,39 +148,46 @@ export default function RegisterPage() {
               value={form.phone}
               onChange={handleChange}
               required
+              className="bg-white/5 border-white/20 text-white placeholder-white/40 focus:ring-purple-500"
             />
+
+            {error && (
+              <p className="text-red-400 text-sm text-center">{error}</p>
+            )}
 
             <Button
               type="submit"
-              className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-semibold py-2.5 rounded-xl hover:shadow-lg hover:scale-[1.01] transition-transform"
               disabled={loading}
+              className="
+                w-full py-3 rounded-xl
+                bg-gradient-to-r from-blue-600 to-purple-600 
+                text-white font-semibold
+                hover:opacity-90 hover:scale-[1.02]
+                transition
+              "
             >
               {loading ? "Creating..." : "Register"}
             </Button>
           </form>
         ) : (
           <div className="text-center space-y-4">
-            <p className="text-gray-700">
-              ✅ Registration successful! Please check your email to confirm your account.
+            <p className="text-white/80">
+              ✅ Registration successful! Check your email to confirm your account.
             </p>
-            <p className="text-sm text-gray-500">
-              Once confirmed, you’ll be redirected to your dashboard automatically.
+            <p className="text-sm text-white/50">
+              After confirmation, you’ll be redirected to your dashboard automatically.
             </p>
           </div>
         )}
 
-        {error && (
-          <p className="text-red-600 mt-4 text-center font-medium">{error}</p>
-        )}
-
-        <p className="text-sm text-gray-600 text-center mt-6">
+        <p className="text-center text-white/60 text-sm mt-6">
           Already have an account?{" "}
-          <a
+          <Link
             href="/login"
-            className="text-indigo-600 hover:underline font-semibold"
+            className="text-purple-400 hover:text-purple-300 font-semibold"
           >
             Login
-          </a>
+          </Link>
         </p>
       </Card>
     </div>

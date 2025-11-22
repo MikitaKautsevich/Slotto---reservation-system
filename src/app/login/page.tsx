@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
 
@@ -10,34 +14,37 @@ import Input from "@/components/custom/Input";
 import Card from "@/components/custom/Card";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Email + Password Login
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
       window.location.href = "/dashboard";
-    } catch (err: any) {
+    } catch {
       setError("Invalid email or password");
     } finally {
       setLoading(false);
     }
   };
 
+  // Google OAuth
   const handleGoogleSignIn = async () => {
     setError("");
     setLoading(true);
+
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      alert(`Welcome ${result.user.displayName}`);
+      await signInWithPopup(auth, provider);
       window.location.href = "/dashboard";
-    } catch (err: any) {
+    } catch {
       setError("Google sign-in failed");
     } finally {
       setLoading(false);
@@ -45,16 +52,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 relative overflow-hidden pb-20 min-h-screen justify-center">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+    <div className="flex items-center justify-center min-h-screen relative overflow-hidden px-6">
+
+      {/* Soft neon background blobs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-[450px] h-[450px] bg-purple-600/20 rounded-full blur-[130px]" />
       </div>
-      <Card className="w-full max-w-md p-8 bg-white/80 backdrop-blur-lg shadow-2xl rounded-3xl border border-gray-100 relative z-10">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+
+      {/* Main card */}
+      <Card className="w-full max-w-md p-10 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl relative z-10">
+        <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
           Welcome back 👋
         </h2>
-        <p className="text-gray-500 text-center mb-8">
+
+        <p className="text-center text-white/60 mt-2 mb-8">
           Sign in to your account to continue
         </p>
 
@@ -63,63 +75,78 @@ export default function LoginPage() {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEmail(e.target.value)
+            }
             required
-            className="focus:ring-2 focus:ring-indigo-500"
+            className="bg-white/5 border-white/20 text-white placeholder-white/40 focus:ring-purple-500"
           />
+
           <Input
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPassword(e.target.value)
+            }
             required
-            className="focus:ring-2 focus:ring-indigo-500"
+            className="bg-white/5 border-white/20 text-white placeholder-white/40 focus:ring-purple-500"
           />
 
           {error && (
-            <p className="text-red-500 text-sm text-center mt-2">{error}</p>
+            <p className="text-red-400 text-sm text-center">{error}</p>
           )}
 
           <Button
             type="submit"
-            className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-semibold py-2.5 rounded-xl hover:shadow-lg hover:scale-[1.01] transition-transform"
             disabled={loading}
+            className="
+              w-full py-3 rounded-xl
+              bg-gradient-to-r from-blue-600 to-purple-600 
+              text-white font-semibold
+              hover:opacity-90 hover:scale-[1.02]
+              transition
+            "
           >
             {loading ? "Signing in..." : "Login"}
           </Button>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white/80 px-3 text-gray-500">or</span>
-            </div>
+          {/* Divider */}
+          <div className="flex items-center my-6">
+            <div className="flex-grow border-t border-white/10"></div>
+            <span className="mx-4 text-white/40 text-sm">or</span>
+            <div className="flex-grow border-t border-white/10"></div>
           </div>
 
+          {/* Google Sign In */}
           <Button
             type="button"
-            onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:bg-gray-50 py-2.5 rounded-xl shadow-sm transition"
             disabled={loading}
+            onClick={handleGoogleSignIn}
+            className="
+              w-full py-3 rounded-xl
+              flex items-center justify-center gap-3
+              bg-white/10 border border-white/20
+              hover:bg-white/15 transition
+            "
           >
             <img
               src="https://www.svgrepo.com/show/355037/google.svg"
               alt="Google"
               className="w-5 h-5"
             />
-            <span className="text-gray-700 font-medium">Sign in with Google</span>
+            <span className="text-white font-medium">Sign in with Google</span>
           </Button>
         </form>
 
-        <p className="text-sm text-gray-600 text-center mt-6">
+        <p className="text-center text-white/60 text-sm mt-6">
           Don’t have an account?{" "}
-          <a
+          <Link
             href="/register"
-            className="text-indigo-600 hover:underline font-semibold"
+            className="text-purple-400 hover:text-purple-300 font-semibold"
           >
             Register
-          </a>
+          </Link>
         </p>
       </Card>
     </div>
