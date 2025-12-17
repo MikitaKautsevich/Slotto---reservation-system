@@ -63,18 +63,9 @@ export default function Dashboard() {
     return (
   <div className="min-h-screen p-8 space-y-20 relative">
 
-    {/* <header>
-      <h1 className="text-4xl font-extrabold text-gray-900">Explore Places</h1>
-      <p className="text-gray-500 text-lg mt-2">
-        Discover experiences and find top-rated companies near you.
-      </p>
-    </header> */}
-
-    <KPIStats companies={companies} />
-
     <Top5Places places={top5Places} />
 
-    <SpotlightSearch value={search} onChange={setSearch} />
+    {/* <SpotlightSearch value={search} onChange={setSearch} /> */}
 
     <CompaniesGrid companies={filteredCompanies} />
 

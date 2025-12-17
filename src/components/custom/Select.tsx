@@ -13,7 +13,7 @@ const Select: React.FC<SelectProps> = ({ error, icon, options, className, ...pro
   return (
     <div className="flex flex-col w-full">
       <div className="relative w-full">
-        {icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>}
+        {icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">{icon}</span>}
         <select
           className={clsx(
             'w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none',

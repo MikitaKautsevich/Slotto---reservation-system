@@ -100,7 +100,7 @@ export default function CompanyDashboardPage() {
         animate={{ x: 0, opacity: 1 }}
         className="hidden md:flex flex-col w-64 p-6 border-r border-gray-200 shadow-sm"
       >
-        <h1 className="text-2xl  font-bold mb-6">Dashboard</h1>
+        <h1 className="text-2xl text-white  font-bold mb-6">Dashboard</h1>
         {companies.length > 1 && (
           <Select
             value={selectedCompany?.name || ""}
@@ -119,7 +119,7 @@ export default function CompanyDashboardPage() {
               className={`w-full text-left px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
                 activeTab === tab
                   ? "bg-blue-600 text-white shadow-sm"
-                 : "text-gray-700 hover:bg-gray-100"
+                 : "text-white hover:bg-blue-300"
               }`}
             >
               {tab}
