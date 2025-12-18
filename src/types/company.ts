@@ -8,6 +8,7 @@ export interface Company {
   description?: string;
   location?: string;
   rating?: number | null;
+  totalReviews?: number;
   photoURL?: string;
   address?: string;
   services: Service[];

@@ -261,7 +261,7 @@ export default function CompaniesGrid({ companies }: { companies: Company[] }) {
                                 ⭐ {company.rating || "0.0"}
                               </span>
                               <span className="text-xs text-white/60 ml-2">
-                                ({company.reviews || 0})
+                                ({company.totalReviews || 0})
                               </span>
                             </div>
 
