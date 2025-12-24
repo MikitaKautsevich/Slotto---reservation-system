@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import dayjs from "dayjs";
 import { motion, AnimatePresence } from "framer-motion";
+import { Loading } from "@/app/Loading";
 
 const SLOT_HEIGHT = 60;
 const INTERVAL_MINUTES = 30;
@@ -107,7 +108,7 @@ export default function CompanyReservations({ companyId }: { companyId: string }
   }, [companyId]);
 
   if (!company) return <div className="p-6 text-center">Loading company info…</div>;
-  if (loading) return <div className="p-6 text-center">Loading reservations…</div>;
+  if (loading) return <Loading/>
 
   const startHour = company.openTime ? parseInt(company.openTime.split(":")[0], 10) : 8;
   const endHour = company.closeTime ? parseInt(company.closeTime.split(":")[0], 10) : 22;

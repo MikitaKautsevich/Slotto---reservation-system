@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import Popup from "@/components/custom/Popup";
 import InfoPopup from "@/components/custom/InfoPopup";
 import { FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { Loading } from "../Loading";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -165,7 +166,7 @@ export default function ProfilePage() {
     router.push("/priceList");
   };
 
-  if (loading) return <p className="text-center mt-10 text-white">Loading...</p>;
+  if (loading) return <Loading/>;
   if (!user) return <p className="text-center mt-10 text-white">Please log in first.</p>;
   if (!userData) return <p className="text-center mt-10 text-white">No user data found.</p>;
 

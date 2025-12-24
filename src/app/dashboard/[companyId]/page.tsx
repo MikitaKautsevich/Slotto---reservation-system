@@ -23,6 +23,7 @@ import Input from "@/components/custom/Input";
 import Textarea from "@/components/custom/Textarea";
 import { Review } from "@/types/review";
 import Select from "@/components/custom/Select";
+import { Loading } from "@/app/Loading";
 
 export default function BookingPage() {
   const { companyId } = useParams();
@@ -252,7 +253,7 @@ export default function BookingPage() {
 
 
 
-  if (loading) return <p className="text-gray-400 text-center mt-10">Loading...</p>;
+  if (loading) return <Loading/>;
   if (!company) return <p className="text-red-400 text-center mt-10">Company not found</p>;
 
   const timeSlots = generateTimeSlots(company.openTime || "09:00", company.closeTime || "18:00");

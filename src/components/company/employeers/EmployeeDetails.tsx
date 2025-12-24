@@ -22,14 +22,14 @@ export const EmployeeDetails = ({
     (employee.servicesIds || []).includes(s.id)
   );
 
-  const isAvailable = Math.random() > 0.3; // just for fun demo
+  const isAvailable = Math.random() > 0.3;
   const joinedAt = new Date(employee.createdAt || Date.now()).toLocaleDateString();
 
   return (
     <AnimatePresence>
       <motion.div
         key="overlay"
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -39,85 +39,90 @@ export const EmployeeDetails = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 120, damping: 15 }}
-          className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-lg relative overflow-hidden"
+          transition={{ type: "spring", stiffness: 120, damping: 14 }}
+          className="relative bg-[#0a0f25] border border-gray-700 rounded-2xl shadow-2xl shadow-blue-900/30 p-6 sm:p-8 w-full max-w-md text-gray-200"
         >
+          {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
+            className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
           >
             <FaTimes size={18} />
           </button>
+
+          {/* Header */}
           <div className="flex flex-col items-center text-center mb-6">
             <div className="relative">
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 opacity-20 blur-md" />
+              <div className="absolute -inset-1 rounded-full bg-blue-600/30 blur-md" />
               <Image
                 src={employee.photoURL || "/placeholder.png"}
                 alt={employee.name}
                 width={96}
                 height={96}
-                className="rounded-full object-cover border-4 border-white shadow-md relative z-10"
+                className="rounded-full object-cover border-4 border-[#12182d] shadow-md relative z-10"
               />
             </div>
-            <h2 className="text-2xl font-semibold mt-4 text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-semibold mt-4 text-white">
               {employee.name}
             </h2>
-            <p className="text-gray-600 text-sm">{employee.position || "Employee"}</p>
+            <p className="text-gray-400 text-sm">{employee.position || "Employee"}</p>
 
             <div
               className={`mt-3 text-xs font-medium px-3 py-1 rounded-full ${
                 isAvailable
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
+                  ? "bg-green-900/30 text-green-400 border border-green-700"
+                  : "bg-red-900/30 text-red-400 border border-red-700"
               }`}
             >
               {isAvailable ? "Available" : "Busy"}
             </div>
           </div>
-          <div className="space-y-2 text-gray-700 mb-5">
+
+          {/* Contact Info */}
+          <div className="space-y-2 text-sm text-gray-400 mb-5">
             {employee.email && (
               <p className="flex items-center gap-2">
-                <FaEnvelope className="text-gray-400" /> {employee.email}
+                <FaEnvelope className="text-gray-500" /> {employee.email}
               </p>
             )}
             {employee.phone && (
               <p className="flex items-center gap-2">
-                <FaPhone className="text-gray-400" /> {employee.phone}
+                <FaPhone className="text-gray-500" /> {employee.phone}
               </p>
             )}
-            <p className="flex items-center gap-2 text-gray-500 text-sm">
-              <FaCalendarAlt className="text-gray-400" /> Joined on {joinedAt}
+            <p className="flex items-center gap-2 text-gray-500">
+              <FaCalendarAlt className="text-gray-500" /> Joined on {joinedAt}
             </p>
           </div>
 
-          {/* Services Section */}
-          <div className="mb-6">
-            <p className="font-semibold mb-3 text-gray-800">Services they can perform:</p>
+          {/* Services */}
+          <div className="mb-5">
+            <p className="font-semibold mb-3 text-gray-300 text-sm">
+              Services they can perform:
+            </p>
             {employeeServices.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {employeeServices.map((s) => (
                   <span
                     key={s.id}
-                    className="px-3 py-1 text-sm font-medium rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-100 hover:from-blue-100 hover:to-indigo-100 transition"
+                    className="px-3 py-1 text-xs font-medium rounded-full bg-[#141a33] text-blue-400 border border-blue-700/50 hover:bg-blue-900/30 transition"
                   >
                     {s.title}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 italic">No services assigned yet</p>
+              <p className="text-gray-500 italic text-sm">
+                No services assigned yet
+              </p>
             )}
           </div>
-          {employee.bio && (
-            <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <p className="font-semibold text-gray-800 mb-2">About</p>
-              <p className="text-gray-600 text-sm leading-relaxed">{employee.bio}</p>
-            </div>
-          )}
-          <div className="flex justify-center mt-8">
+
+          {/* Button */}
+          <div className="flex justify-center mt-6">
             <Button
               onClick={onClose}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-xl shadow hover:shadow-md transition"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow-md shadow-blue-900/30 text-sm"
             >
               Close
             </Button>

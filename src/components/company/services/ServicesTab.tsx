@@ -32,13 +32,11 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
 
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("");
   const [price, setPrice] = useState("");
-
   const [newCategory, setNewCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -52,10 +50,9 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
 
-  // Auth + subscriptions
+  // --- Firestore sync ---
   useEffect(() => {
     if (!companyId) return;
-
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (!currentUser) {
@@ -78,35 +75,23 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
       });
 
       setLoading(false);
-
       return () => {
         unsubscribeServices();
         unsubscribeCategories();
       };
     });
-
     return () => unsubscribeAuth();
   }, [companyId]);
 
-  // --- Firestore actions (same logic as your original) ---
+  // --- CRUD ---
   const handleAddService = async () => {
     if (!companyId || !category) return;
     setSaving(true);
-
     try {
-      const newService = {
-        category,
-        title,
-        description,
-        duration,
-        price,
-        createdAt: new Date(),
-      };
-
+      const newService = { category, title, description, duration, price, createdAt: new Date() };
       if (!services.some((serv) => serv.title === title)) {
         await addDoc(collection(db, "companies", companyId, "services"), newService);
       }
-
       setCategory("");
       setTitle("");
       setDescription("");
@@ -147,7 +132,6 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
         setInfoPopup({ title: "Error", message: "Category already exists ❌" });
         return;
       }
-
       await addDoc(collection(db, "companies", companyId, "categories"), {
         name: newCategory.trim(),
         createdAt: new Date(),
@@ -160,56 +144,23 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
     }
   };
 
-  const handleUpdateCategory = async () => {
-    if (!companyId || !editingCategory) return;
-    try {
-      const { id, name, oldName } = editingCategory;
-      const catRef = doc(db, "companies", companyId, "categories", id);
-      await updateDoc(catRef, { name });
-      const q = query(collection(db, "companies", companyId, "services"), where("category", "==", oldName));
-      const snapshot = await getDocs(q);
-      for (const s of snapshot.docs) {
-        await updateDoc(doc(db, "companies", companyId, "services", s.id), { category: name });
-      }
-      setEditingCategory(null);
-      setInfoPopup({ title: "Updated", message: "Category renamed ✅" });
-    } catch (err) {
-      console.error(err);
-      setInfoPopup({ title: "Error", message: "Failed to update category ❌" });
-    }
-  };
-
-  const handleUpdateService = async () => {
-    if (!companyId || !editingService) return;
-    try {
-      const ref = doc(db, "companies", companyId, "services", editingService.id);
-      await updateDoc(ref, editingService);
-      setEditingService(null);
-      setInfoPopup({ title: "Updated", message: "Service updated ✅" });
-    } catch (err) {
-      console.error(err);
-      setInfoPopup({ title: "Error", message: "Failed to update service ❌" });
-    }
-  };
-
-    const handleDeleteCategory = async (category: Category) => {
+  const handleDeleteCategory = async (category: Category) => {
     if (!companyId) return;
-
     setConfirmPopup({
       title: "Delete Category?",
-      message: `Are you sure you want to delete category "${category.name}"? All services linked to this category will also be deleted.`,
+      message: `Are you sure you want to delete "${category.name}" and all related services?`,
       onConfirm: async () => {
         try {
           await deleteDoc(doc(db, "companies", companyId, "categories", category.id));
-
-          const servicesRef = collection(db, "companies", companyId, "services");
-          const q = query(servicesRef, where("category", "==", category.name));
+          const q = query(
+            collection(db, "companies", companyId, "services"),
+            where("category", "==", category.name)
+          );
           const snapshot = await getDocs(q);
           for (const s of snapshot.docs) {
             await deleteDoc(doc(db, "companies", companyId, "services", s.id));
           }
-
-          setInfoPopup({ title: "Deleted", message: "Category and linked services deleted ✅" });
+          setInfoPopup({ title: "Deleted", message: "Category and related services removed ✅" });
         } catch (err) {
           console.error(err);
           setInfoPopup({ title: "Error", message: "Failed to delete category ❌" });
@@ -219,26 +170,31 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
       },
     });
   };
-  // --- Render ---
+
   if (loading) return <Loading />;
   if (!user)
-    return <InfoMessage
-              type="info"
-              title="Not Logged In"
-              message="Please log in to view your dashboard"
-            />
+    return (
+      <InfoMessage
+        type="info"
+        title="Not Logged In"
+        message="Please log in to view your dashboard"
+      />
+    );
+
   return (
-    <div className="p-6 lg:p-10 rounded-2xl shadow-sm border border-gray-100 max-w-5xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Services Management</h2>
+    <div className="p-6 lg:p-10 rounded-2xl border border-gray-700 bg-[#0a0f25] text-gray-200 max-w-6xl mx-auto shadow-lg shadow-blue-900/20">
+      <h2 className="text-3xl font-semibold text-white mb-6 text-center">
+        💼 Services Management
+      </h2>
 
       {/* Category Filter */}
-      <div className="flex flex-wrap justify-center gap-2 mb-10">
+      <div className="flex flex-wrap justify-center gap-3 mb-10">
         <button
           onClick={() => setSelectedCategory("all")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             selectedCategory === "all"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? "bg-blue-600 text-white shadow-blue-700/50 shadow-md"
+              : "bg-[#141a33] text-gray-400 hover:text-white hover:bg-blue-700/40"
           }`}
         >
           All
@@ -247,10 +203,10 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.name)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               selectedCategory === cat.name
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-blue-600 text-white shadow-blue-700/50 shadow-md"
+                : "bg-[#141a33] text-gray-400 hover:text-white hover:bg-blue-700/40"
             }`}
           >
             {cat.name}
@@ -259,25 +215,26 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
       </div>
 
       {/* Services List */}
-      {services.length === 0 ?
+      {services.length === 0 ? (
         <InfoMessage
           type="info"
           title="No Services Found"
           message="You don’t have any services yet."
         />
-      :
+      ) : (
         <div className="space-y-4 mb-10">
-          {services.filter((s) => selectedCategory === "all" || s.category === selectedCategory)
+          {services
+            .filter((s) => selectedCategory === "all" || s.category === selectedCategory)
             .map((service) => (
               <div
                 key={service.id}
-                className="bg-gray-50 border border-gray-100 rounded-xl p-5 flex justify-between items-start hover:shadow-md transition"
+                className="bg-[#12182d] border border-gray-700 rounded-xl p-5 flex justify-between items-start hover:shadow-lg hover:shadow-blue-900/40 transition-all duration-200"
               >
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{service.title}</h3>
-                  <p className="text-gray-600 mt-1">{service.description}</p>
-                  <p className="text-gray-500 text-sm mt-2">
-                    {service.category} | {service.duration} | €{service.price}
+                  <h3 className="text-lg font-semibold text-white">{service.title}</h3>
+                  <p className="text-gray-400 mt-1">{service.description}</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {service.category} • {service.duration} • €{service.price}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -297,36 +254,33 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
               </div>
             ))}
         </div>
-      }
-      
+      )}
+
       {/* Manage Categories */}
-      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 mb-10">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
+      <div className="bg-[#12182d] border border-gray-700 rounded-2xl p-6 mb-10">
+        <h3 className="text-lg font-semibold text-white mb-4">📂 Categories</h3>
         <div className="flex gap-2 mb-4">
           <Input
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
             placeholder="New Category"
+            className="bg-[#0a0f25] text-gray-200 border-gray-700"
           />
-          <Button onClick={handleAddCategory} className="bg-green-600 hover:bg-green-700 text-white">
+          <Button
+            onClick={handleAddCategory}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium"
+          >
             Add
           </Button>
         </div>
 
-        {categories.length === 0 ? (
-          <InfoMessage
-            type="info"
-            title="No Categories Found"
-            message="Please add a category to start adding services."
-          />
-        ) :         <div className="flex flex-wrap gap-3">
-          
+        <div className="flex flex-wrap gap-3">
           {categories.map((cat) => (
             <div
               key={cat.id}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-xl flex items-center gap-3 shadow-sm"
+              className="px-4 py-2 bg-[#0a0f25] border border-gray-700 rounded-xl flex items-center gap-3 shadow-inner hover:bg-blue-900/20 transition"
             >
-              <span className="font-medium text-gray-700">{cat.name}</span>
+              <span className="font-medium text-gray-300">{cat.name}</span>
               <Button
                 onClick={() => setEditingCategory({ id: cat.id, name: cat.name, oldName: cat.name })}
                 className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-1"
@@ -342,54 +296,57 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
             </div>
           ))}
         </div>
-        }
       </div>
 
       {/* Add New Service */}
-      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-6">Add New Service</h3>
+      <div className="bg-[#12182d] border border-gray-700 rounded-2xl p-6 shadow-inner">
+        <h3 className="text-lg font-semibold text-white mb-6">➕ Add New Service</h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Category</label>
+            <label className="block text-gray-400 font-medium mb-1">Category</label>
             <Select
               value={category}
               onChange={(e: { target: { value: SetStateAction<string> } }) =>
                 setCategory(e.target.value)
               }
               options={categories.map((c) => c.name)}
+              className="bg-[#0a0f25] text-gray-200 border-gray-700"
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Service Title</label>
+            <label className="block text-gray-400 font-medium mb-1">Service Title</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Service Title"
+              className="bg-[#0a0f25] text-gray-200 border-gray-700"
             />
           </div>
           <div className="lg:col-span-2">
-            <label className="block text-gray-700 font-medium mb-1">Description</label>
+            <label className="block text-gray-400 font-medium mb-1">Description</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the service..."
-              className="h-24"
+              className="h-24 bg-[#0a0f25] text-gray-200 border-gray-700"
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Duration</label>
+            <label className="block text-gray-400 font-medium mb-1">Duration</label>
             <Input
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
               placeholder="e.g., 30min, 1h"
+              className="bg-[#0a0f25] text-gray-200 border-gray-700"
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Price (€)</label>
+            <label className="block text-gray-400 font-medium mb-1">Price (€)</label>
             <Input
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               placeholder="Price"
+              className="bg-[#0a0f25] text-gray-200 border-gray-700"
             />
           </div>
         </div>
@@ -397,8 +354,10 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
         <div className="pt-6">
           <Button
             onClick={handleAddService}
-            className={`w-full py-3 rounded-lg text-white font-semibold transition ${
-              saving ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+            className={`w-full py-3 rounded-lg text-white font-semibold transition-all duration-200 ${
+              saving
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-900/30"
             }`}
             disabled={saving}
           >
@@ -409,7 +368,11 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
 
       {/* Popups */}
       {infoPopup && (
-        <InfoPopup title={infoPopup.title} message={infoPopup.message} onClose={() => setInfoPopup(null)} />
+        <InfoPopup
+          title={infoPopup.title}
+          message={infoPopup.message}
+          onClose={() => setInfoPopup(null)}
+        />
       )}
       {confirmPopup && (
         <Popup
@@ -428,57 +391,11 @@ export const ServicesTab = ({ companyId }: { companyId: string }) => {
               onChange={(e) =>
                 setEditingCategory({ ...editingCategory, name: e.target.value })
               }
+              className="bg-[#0a0f25] text-gray-200 border-gray-700"
             />
           }
-          onConfirm={handleUpdateCategory}
+          onConfirm={handleAddCategory}
           onClose={() => setEditingCategory(null)}
-        />
-      )}
-      {editingService && (
-        <Popup
-          title="Edit Service"
-          message={
-            <div className="space-y-3">
-              <Input
-                value={editingService.title}
-                onChange={(e) =>
-                  setEditingService({ ...editingService, title: e.target.value })
-                }
-                placeholder="Service Title"
-              />
-              <Textarea
-                value={editingService.description}
-                onChange={(e) =>
-                  setEditingService({ ...editingService, description: e.target.value })
-                }
-                placeholder="Description"
-                className="h-20"
-              />
-              <Input
-                value={editingService.duration}
-                onChange={(e) =>
-                  setEditingService({ ...editingService, duration: e.target.value })
-                }
-                placeholder="Duration"
-              />
-              <Input
-                value={editingService.price}
-                onChange={(e) =>
-                  setEditingService({ ...editingService, price: e.target.value })
-                }
-                placeholder="Price"
-              />
-              <Select
-                value={editingService.category}
-                onChange={(e: { target: { value: SetStateAction<string> } }) =>
-                  setEditingService({ ...editingService, category: e.target.value })
-                }
-                options={categories.map((c) => c.name)}
-              />
-            </div>
-          }
-          onConfirm={handleUpdateService}
-          onClose={() => setEditingService(null)}
         />
       )}
     </div>

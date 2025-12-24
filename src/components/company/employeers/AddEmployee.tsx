@@ -69,15 +69,9 @@ export const AddEmployee = ({
       };
 
       if (employee?.id) {
-        await updateDoc(
-          doc(db, "companies", companyId, "employees", employee.id),
-          employeeData
-        );
+        await updateDoc(doc(db, "companies", companyId, "employees", employee.id), employeeData);
       } else {
-        const docRef = await addDoc(
-          collection(db, "companies", companyId, "employees"),
-          employeeData
-        );
+        const docRef = await addDoc(collection(db, "companies", companyId, "employees"), employeeData);
         onEmployeeAdded?.({ id: docRef.id, ...employeeData });
       }
 
@@ -92,47 +86,51 @@ export const AddEmployee = ({
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ type: "spring", stiffness: 100, damping: 15 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-5xl max-h-[90vh] overflow-y-auto relative border border-gray-100"
+          className="bg-[#0a0f25] border border-gray-700 rounded-2xl shadow-2xl shadow-blue-900/30 p-6 sm:p-8 w-full max-w-4xl max-h-[85vh] overflow-y-auto relative text-gray-200"
         >
           {/* Header */}
-          <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-              {employee ? "Edit Employee" : "Add New Employee"} <FaUser className="text-blue-600" />
+          <div className="flex justify-between items-center border-b border-gray-700 pb-4 mb-6">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center gap-2">
+              {employee ? "Edit Employee" : "Add New Employee"}{" "}
+              <FaUser className="text-blue-500" />
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-700 transition text-2xl font-bold"
+              className="text-gray-400 hover:text-white transition text-xl"
             >
               <FaTimes />
             </button>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Left side - Photo + Services */}
+            {/* Left: Photo + Services */}
             <div className="space-y-6">
+              {/* Photo */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Profile Photo
+                </label>
                 <div className="flex items-center gap-4">
                   <div className="relative group">
                     {(photoFile || photoURL) ? (
                       <img
                         src={photoFile ? URL.createObjectURL(photoFile) : photoURL}
                         alt="Preview"
-                        className="w-28 h-28 rounded-2xl object-cover border-2 border-blue-200 group-hover:scale-105 transition-transform shadow-md"
+                        className="w-28 h-28 rounded-xl object-cover border border-gray-700 group-hover:scale-105 transition-transform shadow-md shadow-blue-900/30"
                       />
                     ) : (
-                      <div className="w-28 h-28 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200">
-                        <FaCamera size={22} />
+                      <div className="w-28 h-28 rounded-xl bg-[#12182d] border border-gray-700 flex items-center justify-center text-gray-500">
+                        <FaCamera size={20} />
                       </div>
                     )}
                   </div>
@@ -140,7 +138,7 @@ export const AddEmployee = ({
                     <input
                       type="file"
                       accept="image/*"
-                      className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                      className="w-full text-sm text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-900/30 file:text-blue-400 hover:file:bg-blue-800/50 cursor-pointer"
                       onChange={(e) => {
                         setPhotoFile(e.target.files?.[0] || null);
                         setPhotoURL("");
@@ -154,19 +152,22 @@ export const AddEmployee = ({
                         setPhotoURL(e.target.value);
                         setPhotoFile(null);
                       }}
-                      className="w-full rounded-xl border border-gray-200 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full rounded-lg border border-gray-700 bg-[#12182d] p-2 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* Services */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Services</label>
-                <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto rounded-xl border border-gray-100 p-3 bg-gray-50">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Services
+                </label>
+                <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto rounded-xl border border-gray-700 p-3 bg-[#12182d]">
                   {services.map((s) => (
                     <label
                       key={s.id}
-                      className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-blue-600"
+                      className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-blue-400 transition"
                     >
                       <input
                         type="checkbox"
@@ -181,68 +182,55 @@ export const AddEmployee = ({
               </div>
             </div>
 
-            {/* Right side - Form fields */}
-            <div className="space-y-5">
+            {/* Right: Fields */}
+            <div className="space-y-4">
+              {[
+                {
+                  label: "Full Name",
+                  required: true,
+                  value: name,
+                  setter: setName,
+                  placeholder: "John Doe",
+                },
+                {
+                  label: "Position",
+                  required: true,
+                  value: position,
+                  setter: setPosition,
+                  placeholder: "Hair Stylist",
+                },
+                { label: "Email", value: email, setter: setEmail, placeholder: "employee@email.com" },
+                { label: "Phone", value: phone, setter: setPhone, placeholder: "+421 987 654 321" },
+              ].map((f) => (
+                <div key={f.label}>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    {f.label}
+                    {f.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={f.placeholder}
+                    value={f.value}
+                    onChange={(e) => f.setter(e.target.value)}
+                    className={`w-full rounded-lg border ${
+                      !f.value.trim() && f.required
+                        ? "border-red-600"
+                        : "border-gray-700"
+                    } bg-[#12182d] p-3 text-sm focus:ring-2 focus:ring-blue-600 outline-none transition`}
+                  />
+                </div>
+              ))}
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  About / Notes
                 </label>
-                <input
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={`w-full rounded-xl border ${
-                    !name.trim() ? "border-red-300" : "border-gray-200"
-                  } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Position <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Hair Stylist"
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  className={`w-full rounded-xl border ${
-                    !position.trim() ? "border-red-300" : "border-gray-200"
-                  } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  placeholder="employee@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input
-                  type="tel"
-                  placeholder="+421 987 654 321"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">About / Notes</label>
                 <textarea
-                  placeholder="Short bio or notes about this employee..."
+                  placeholder="Short bio or notes..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   rows={3}
-                  className="w-full rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none resize-none"
+                  className="w-full rounded-lg border border-gray-700 bg-[#12182d] p-3 text-sm focus:ring-2 focus:ring-blue-600 outline-none resize-none"
                 />
               </div>
             </div>
@@ -251,28 +239,33 @@ export const AddEmployee = ({
           {/* Schedule */}
           {employee?.id && (
             <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Work Schedule</h3>
-              <div className="rounded-xl border border-gray-100 p-3 bg-gray-50">
-                <EmployeeScheduleCalendar companyId={companyId} employeeId={employee.id} />
+              <h3 className="text-lg font-semibold text-white mb-3">
+                Work Schedule
+              </h3>
+              <div className="rounded-xl border border-gray-700 p-3 bg-[#12182d]">
+                <EmployeeScheduleCalendar
+                  companyId={companyId}
+                  employeeId={employee.id}
+                />
               </div>
             </div>
           )}
 
           {/* Buttons */}
-          <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
+          <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-700">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium transition"
+              className="px-6 py-2 rounded-lg border border-gray-600 text-gray-300 bg-[#12182d] hover:bg-gray-800 font-medium transition"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className={`px-6 py-2.5 rounded-xl font-medium text-white shadow-md transition-all ${
+              className={`px-6 py-2 rounded-lg font-medium text-white shadow-md transition-all ${
                 saving
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg"
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-900/30"
               }`}
             >
               {saving ? "Saving..." : employee ? "Save Changes" : "Add Employee"}

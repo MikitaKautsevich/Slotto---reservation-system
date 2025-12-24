@@ -3,13 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { db, auth } from "@/lib/firebase";
-import {
-  collection,
-  getDocs,
-  deleteDoc,
-  doc,
-  onSnapshot,
-} from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 import Button from "@/components/custom/Button";
 import { AddEmployee } from "./AddEmployee";
@@ -22,6 +16,7 @@ import { EmployeeDetails } from "./EmployeeDetails";
 import Input from "@/components/custom/Input";
 import Select from "@/components/custom/Select";
 import { InfoMessage } from "@/components/custom/InfoMessage";
+import { Loading } from "@/app/Loading";
 
 export const EmployeesTab = ({ companyId }: { companyId: string }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -74,23 +69,28 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
   };
 
   const departments = Array.from(new Set(employees.map((e) => e.position))).filter(Boolean);
-
   const filteredEmployees = employees.filter((emp) => {
     const matchesName = emp.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = selectedDepartment === "all" || emp.position === selectedDepartment;
     return matchesName && matchesDept;
   });
 
-  if (loading)
-    return <p className="text-gray-500 text-center mt-10">Loading employees...</p>;
+  if (loading)return <Loading/>
 
   if (!user)
-    return <p className="text-red-500 text-center mt-10">Please log in to view employees.</p>;
+    return (
+      <InfoMessage
+        type="info"
+        title="Not Logged In"
+        message="Please log in to view employees."
+      />
+    );
 
   return (
-    <div className="h-svh p-6 lg:p-10 rounded-2xl shadow-sm border border-gray-100 max-w-6xl mx-auto">
+    <div className="min-h-screen p-6 lg:p-10 rounded-2xl bg-[#0a0f25] border border-gray-700 shadow-lg shadow-blue-900/30 max-w-6xl mx-auto text-gray-200">
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+        <h2 className="text-3xl font-semibold text-white flex items-center gap-2">
           👥 Employees
           <span className="text-sm text-gray-500 font-normal">
             ({employees.length})
@@ -101,7 +101,7 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
             setEditEmployee(null);
             setShowModal(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl shadow-md shadow-blue-900/40"
         >
           + New Employee
         </Button>
@@ -110,20 +110,20 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
       {/* Search & Filters */}
       <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
         <div className="relative w-full sm:w-1/2">
-          <FaSearch className="absolute left-3 top-3 text-gray-400" />
+          <FaSearch className="absolute left-3 top-3 text-gray-500" />
           <Input
             type="text"
             placeholder="Search employee by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-700"
+            className="w-full pl-10 pr-4 py-2 bg-[#12182d] text-gray-200 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
           />
         </div>
         <Select
           value={selectedDepartment}
           onChange={(e) => setSelectedDepartment(e.target.value)}
           options={["all", ...departments]}
-          className="border border-gray-200 rounded-xl py-2 px-4 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="bg-[#12182d] border border-gray-700 rounded-xl py-2 px-4 text-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-transparent"
         />
       </div>
 
@@ -140,7 +140,7 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
             <div
               key={emp.id}
               onClick={() => setViewEmployee(emp)}
-              className="group bg-gray-50 rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+              className="group bg-[#12182d] border border-gray-700 rounded-2xl p-5 hover:shadow-xl hover:shadow-blue-900/40 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between"
             >
               <div className="flex items-center gap-4">
                 {emp.photoURL ? (
@@ -148,31 +148,23 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
                     width={64}
                     height={64}
                     src={emp.photoURL}
-                    className="w-16 h-16 rounded-xl object-cover shadow-sm"
+                    className="w-16 h-16 rounded-xl object-cover border border-gray-700"
                     alt={emp.name}
                   />
                 ) : (
-                  <div className="w-16 h-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-200 to-gray-300">
+                  <div className="w-16 h-16 flex items-center justify-center rounded-xl bg-[#1a1f35] border border-gray-700">
                     <FaUser className="text-gray-500 text-2xl" />
                   </div>
                 )}
                 <div>
-                  <p className="text-lg font-semibold text-gray-900">{emp.name}</p>
-                  <p className="text-sm text-gray-600">{emp.position}</p>
+                  <p className="text-lg font-semibold text-white">{emp.name}</p>
+                  <p className="text-sm text-gray-400">{emp.position}</p>
                 </div>
               </div>
 
-              <div className="mt-4 text-sm text-gray-500">
-                {emp.email && (
-                  <p>
-                    📧 <span className="text-gray-700">{emp.email}</span>
-                  </p>
-                )}
-                {emp.phone && (
-                  <p>
-                    📞 <span className="text-gray-700">{emp.phone}</span>
-                  </p>
-                )}
+              <div className="mt-4 text-sm text-gray-400">
+                {emp.email && <p>📧 {emp.email}</p>}
+                {emp.phone && <p>📞 {emp.phone}</p>}
               </div>
 
               <div className="mt-5 flex justify-end gap-3">
@@ -182,7 +174,7 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
                     setEditEmployee(emp);
                     setShowModal(true);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 hover:text-blue-700 transition"
+                  className="px-4 py-2 text-sm font-medium text-yellow-400 bg-yellow-900/20 rounded-xl hover:bg-yellow-800/40 hover:text-yellow-300 transition"
                 >
                   ✏️ Edit
                 </button>
@@ -191,7 +183,7 @@ export const EmployeesTab = ({ companyId }: { companyId: string }) => {
                     e.stopPropagation();
                     setConfirmDeleteId(emp.id);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 hover:text-red-700 transition"
+                  className="px-4 py-2 text-sm font-medium text-red-400 bg-red-900/20 rounded-xl hover:bg-red-800/40 hover:text-red-300 transition"
                 >
                   🗑 Delete
                 </button>

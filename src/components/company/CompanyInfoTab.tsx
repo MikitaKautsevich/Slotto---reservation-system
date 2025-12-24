@@ -8,6 +8,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import Input from "@/components/custom/Input";
 import Button from "@/components/custom/Button";
 import Textarea from "@/components/custom/Textarea";
+import { Loading } from "@/app/Loading";
 
 export default function CompanyInfoTab({ companyId }: { companyId: string }) {
   const [user, setUser] = useState<User | null>(null);
@@ -116,7 +117,7 @@ export default function CompanyInfoTab({ companyId }: { companyId: string }) {
     setPhotoUrl(null);
   };
 
-  if (loading) return <p className="text-gray-400 text-center mt-10">Loading company info...</p>;
+  if (loading) return <Loading/>;
   if (!user) return <p className="text-red-400 text-center mt-10">Please log in to view company info.</p>;
 
   return (

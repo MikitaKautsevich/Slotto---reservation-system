@@ -23,7 +23,6 @@ enum Tab {
 }
 
 export default function CompanyDashboardPage() {
-
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Info);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -75,32 +74,36 @@ export default function CompanyDashboardPage() {
     }
   };
 
-  if (loading)
-    return <CompanyDashboardSkeleton/>;
+  if (loading) return <CompanyDashboardSkeleton />;
 
   if (!user)
-    return <InfoMessage
-            type="info"
-            title="Not Logged In"
-            message="Please log in to view your dashboard"
-          />
-  
+    return (
+      <InfoMessage
+        type="info"
+        title="Not Logged In"
+        message="Please log in to view your dashboard"
+      />
+    );
+
   if (companies.length === 0)
-    return <InfoMessage
-              type="info"
-              title="Companies Not Found"
-              message="You don’t have any companies yet."
-            /> 
-    // <p className="text-gray-500 text-center mt-10">You don’t have any companies yet.</p>;
+    return (
+      <InfoMessage
+        type="info"
+        title="Companies Not Found"
+        message="You don’t have any companies yet."
+      />
+    );
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[#030617] text-gray-200">
+      {/* Sidebar */}
       <motion.aside
         initial={{ x: -30, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="hidden md:flex flex-col w-64 p-6 border-r border-gray-200 shadow-sm"
+        className="hidden md:flex flex-col w-64 p-6 border-r border-gray-700 bg-[#0a0f25] shadow-none"
       >
-        <h1 className="text-2xl text-white  font-bold mb-6">Dashboard</h1>
+        <h1 className="text-2xl font-bold mb-6 text-white">Dashboard</h1>
+
         {companies.length > 1 && (
           <Select
             value={selectedCompany?.name || ""}
@@ -111,6 +114,7 @@ export default function CompanyDashboardPage() {
             options={companies.map((comp) => comp.name || "Unnamed Company")}
           />
         )}
+
         <div className="space-y-2 mt-6">
           {Object.values(Tab).map((tab) => (
             <button
@@ -118,38 +122,39 @@ export default function CompanyDashboardPage() {
               onClick={() => setActiveTab(tab)}
               className={`w-full text-left px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
                 activeTab === tab
-                  ? "bg-blue-600 text-white shadow-sm"
-                 : "text-white hover:bg-blue-300"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-400 hover:bg-[#1a1f35]"
               }`}
             >
               {tab}
             </button>
           ))}
-        </div>   
+        </div>
       </motion.aside>
+
       {/* Mobile Menu */}
       <AnimatePresence>
         {menuOpen && (
           <>
             <motion.div
-              className="fixed inset-0 bg-opacity-40 z-30"
+              className="fixed inset-0 bg-black bg-opacity-50 z-30"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMenuOpen(false)}
             />
             <motion.nav
-              className="fixed top-0 left-0 h-full w-64 shadow-xl z-40 p-6 flex flex-col space-y-4"
+              className="fixed top-0 left-0 h-full w-64 shadow-xl z-40 p-6 flex flex-col space-y-4 bg-[#0a0f25] border-r border-gray-700"
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: "tween", duration: 0.25 }}
             >
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-xl font-bold">Dashboard</h1>
+                <h1 className="text-xl font-bold text-white">Dashboard</h1>
                 <button onClick={() => setMenuOpen(false)}>
                   <svg
-                    className="w-6 h-6 text-gray-700"
+                    className="w-6 h-6 text-gray-400 hover:text-white"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={2}
@@ -167,7 +172,7 @@ export default function CompanyDashboardPage() {
                     const comp = companies.find((c) => c.id === e.target.value);
                     setSelectedCompany(comp ?? null);
                   }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4"
+                  className="w-full border border-gray-700 rounded-lg px-3 py-2 mb-4 bg-[#030617] text-gray-200"
                 >
                   {companies.map((comp) => (
                     <option key={comp.id} value={comp.id}>
@@ -187,7 +192,7 @@ export default function CompanyDashboardPage() {
                   className={`text-left px-4 py-2 rounded-lg font-medium transition-all duration-150 ${
                     activeTab === tab
                       ? "bg-blue-600 text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      : "text-gray-400 hover:bg-[#1a1f35]"
                   }`}
                 >
                   {tab}
@@ -197,14 +202,17 @@ export default function CompanyDashboardPage() {
           </>
         )}
       </AnimatePresence>
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Mobile Header */}
-        <div className="md:hidden flex items-center justify-between shadow-sm p-4 sticky top-0 z-20 border-b">
-          <h1 className="text-lg font-bold">{selectedCompany?.name || "Company Dashboard"}</h1>
+        <div className="md:hidden flex items-center justify-between p-4 sticky top-0 z-20 border-b border-gray-700 bg-[#0a0f25]">
+          <h1 className="text-lg font-bold text-white">
+            {selectedCompany?.name || "Company Dashboard"}
+          </h1>
           <button onClick={() => setMenuOpen(true)}>
             <svg
-              className="w-6 h-6 text-gray-700"
+              className="w-6 h-6 text-gray-400 hover:text-white"
               fill="none"
               stroke="currentColor"
               strokeWidth={2.2}
@@ -223,7 +231,7 @@ export default function CompanyDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.35 }}
-            className="rounded-2xl shadow-md p-6 md:p-8"
+            className="rounded-2xl bg-[#0a0f25] border border-gray-700 p-6 md:p-8 shadow-none"
           >
             {renderContent()}
           </motion.div>
